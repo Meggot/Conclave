@@ -1,0 +1,8 @@
+grant {
+            permission java.net.SocketPermission  "*:1025-66500", "connect,accept,listen,resolve";
+            permission java.net.SocketPermission  "230.0.0.2", "connect,accept,listen,resolve";
+            permission java.net.SocketPermission  "*:80", "connect";
+            permission java.io.FilePermission     "*"           , "read, write";
+            permission java.util.PropertyPermission "java.net.preferIPv4Stack", "write";
+            permission java.security.AllPermission;
+ };

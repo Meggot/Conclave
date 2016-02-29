@@ -24,6 +24,10 @@ public class Chatlog implements ChatlogInterface, Serializable {
         textLog = new ArrayList<>();
     }
     
+    /**
+     * 
+     * @param Message 
+     */
     @Override
     public void addMessage(Message Message)
     {
@@ -43,6 +47,12 @@ public class Chatlog implements ChatlogInterface, Serializable {
         return allEntries;
     }
     
+    
+    /**
+     * 
+     * @param lstMsgRecievedLine
+     * @return 
+     */
     @Override
     public LinkedList<Message> getAllEntriesAfter(int lstMsgRecievedLine)
     {

@@ -11,6 +11,7 @@ import conclave.model.ConnectionEntry;
 import conclave.model.Message;
 import java.awt.Dimension;
 import java.rmi.RemoteException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import javax.swing.BorderFactory;
@@ -18,6 +19,10 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
+import javax.swing.text.MaskFormatter;
 
 /**
  *
@@ -39,8 +44,29 @@ public class SwingGUI extends javax.swing.JFrame {
             setConnectionsArea(client.viewAllConnections());
             setVisible(true);
             startChatLogUpdates();
+            formatTextSuffix();
         } catch (RemoteException e) {
             e.printStackTrace();
+        }
+    }
+    
+    private void addMsgFilter()
+    {
+        chatlogFilters.add(filtersMsg);
+    }
+    
+    private void formatTextSuffix()
+    {
+        try {
+            String username = client.getUsername();
+            MaskFormatter usernameMask = new MaskFormatter(username + ": ");
+            usernameMask.install(textInputArea);
+            textInputArea.setColumns(20);
+        } catch (RemoteException e)
+        {
+            
+        } catch (ParseException e){
+            
         }
     }
 
@@ -68,21 +94,22 @@ public class SwingGUI extends javax.swing.JFrame {
         pmField = new javax.swing.JTextField();
         pmSendButton = new java.awt.Button();
         pmLabel = new javax.swing.JLabel();
+        filtersMsg = new javax.swing.ButtonGroup();
         jScrollPane2 = new javax.swing.JScrollPane();
         interactablePanel = new javax.swing.JScrollPane();
-        jPanel3 = new javax.swing.JPanel();
-        disconnectButton = new javax.swing.JButton();
-        leaveRoomButton = new javax.swing.JButton();
-        exportChatLogButton = new javax.swing.JButton();
-        refreshConnections = new javax.swing.JButton();
         connectionsScrollPanel = new javax.swing.JScrollPane();
         connectionsPanel = new javax.swing.JPanel();
         textLog = new java.awt.TextArea();
         jPanel1 = new javax.swing.JPanel();
         sendMessageButton = new javax.swing.JButton();
-        filterCheckbox = new java.awt.Checkbox();
-        textInputArea = new javax.swing.JTextField();
         welcomeLabel = new javax.swing.JLabel();
+        refreshConnections = new javax.swing.JButton();
+        disconnectButton = new javax.swing.JButton();
+        leaveRoomButton = new javax.swing.JButton();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jTextArea1 = new javax.swing.JTextArea();
+        exportChatLogButton = new javax.swing.JButton();
+        chatlogFilters = new javax.swing.JPanel();
 
         jMenuItem1.setText("jMenuItem1");
 
@@ -181,11 +208,56 @@ public class SwingGUI extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        pmSendButton.getAccessibleContext().setAccessibleName("Send");
-
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jScrollPane2.setViewportView(interactablePanel);
+
+        connectionsScrollPanel.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        connectionsScrollPanel.addContainerListener(new java.awt.event.ContainerAdapter() {
+            public void componentAdded(java.awt.event.ContainerEvent evt) {
+                connectionsScrollPanelComponentAdded(evt);
+            }
+        });
+
+        javax.swing.GroupLayout connectionsPanelLayout = new javax.swing.GroupLayout(connectionsPanel);
+        connectionsPanel.setLayout(connectionsPanelLayout);
+        connectionsPanelLayout.setHorizontalGroup(
+            connectionsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 173, Short.MAX_VALUE)
+        );
+        connectionsPanelLayout.setVerticalGroup(
+            connectionsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 255, Short.MAX_VALUE)
+        );
+
+        connectionsScrollPanel.setViewportView(connectionsPanel);
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 450, Short.MAX_VALUE)
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+
+        sendMessageButton.setText("-->");
+        sendMessageButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                sendMessageButtonActionPerformed(evt);
+            }
+        });
+
+        welcomeLabel.setText("Welcome to Conclave");
+
+        refreshConnections.setText("Refresh");
+        refreshConnections.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                refreshConnectionsActionPerformed(evt);
+            }
+        });
 
         disconnectButton.setText("Disconnect");
         disconnectButton.addActionListener(new java.awt.event.ActionListener() {
@@ -201,6 +273,11 @@ public class SwingGUI extends javax.swing.JFrame {
             }
         });
 
+        jTextArea1.setColumns(20);
+        jTextArea1.setFont(new java.awt.Font("Monospaced", 0, 14)); // NOI18N
+        jTextArea1.setRows(5);
+        jScrollPane3.setViewportView(jTextArea1);
+
         exportChatLogButton.setText("Export ChatLog");
         exportChatLogButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -208,89 +285,16 @@ public class SwingGUI extends javax.swing.JFrame {
             }
         });
 
-        refreshConnections.setText("Refresh");
-        refreshConnections.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                refreshConnectionsActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(disconnectButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(leaveRoomButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(exportChatLogButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(28, 28, 28)
-                .addComponent(refreshConnections)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        javax.swing.GroupLayout chatlogFiltersLayout = new javax.swing.GroupLayout(chatlogFilters);
+        chatlogFilters.setLayout(chatlogFiltersLayout);
+        chatlogFiltersLayout.setHorizontalGroup(
+            chatlogFiltersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
         );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(refreshConnections, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(disconnectButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(leaveRoomButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 58, Short.MAX_VALUE)
-                .addComponent(exportChatLogButton))
+        chatlogFiltersLayout.setVerticalGroup(
+            chatlogFiltersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 60, Short.MAX_VALUE)
         );
-
-        connectionsScrollPanel.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        connectionsScrollPanel.addContainerListener(new java.awt.event.ContainerAdapter() {
-            public void componentAdded(java.awt.event.ContainerEvent evt) {
-                connectionsScrollPanelComponentAdded(evt);
-            }
-        });
-
-        javax.swing.GroupLayout connectionsPanelLayout = new javax.swing.GroupLayout(connectionsPanel);
-        connectionsPanel.setLayout(connectionsPanelLayout);
-        connectionsPanelLayout.setHorizontalGroup(
-            connectionsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 156, Short.MAX_VALUE)
-        );
-        connectionsPanelLayout.setVerticalGroup(
-            connectionsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 220, Short.MAX_VALUE)
-        );
-
-        connectionsScrollPanel.setViewportView(connectionsPanel);
-
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 111, Short.MAX_VALUE)
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 26, Short.MAX_VALUE)
-        );
-
-        sendMessageButton.setText("Send Message");
-        sendMessageButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                sendMessageButtonActionPerformed(evt);
-            }
-        });
-
-        filterCheckbox.setLabel("View All Messages");
-
-        textInputArea.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                textInputAreaActionPerformed(evt);
-            }
-        });
-
-        welcomeLabel.setText("Welcome to Conclave");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -299,48 +303,63 @@ public class SwingGUI extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(connectionsScrollPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(filterCheckbox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(connectionsScrollPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 6, Short.MAX_VALUE))
+                    .addComponent(refreshConnections, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(disconnectButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(leaveRoomButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(exportChatLogButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(chatlogFilters, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(textLog, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jScrollPane3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(143, 143, 143)
                         .addComponent(sendMessageButton))
-                    .addComponent(textLog, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(textInputArea))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(311, 311, 311)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jScrollPane2))
                 .addContainerGap())
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(welcomeLabel)
-                .addGap(77, 77, 77))
+                .addGap(346, 346, 346))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(6, 6, 6)
                 .addComponent(welcomeLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2)
-                    .addComponent(connectionsScrollPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 201, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(connectionsScrollPanel)
+                    .addComponent(jScrollPane2))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 38, Short.MAX_VALUE)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(textLog, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(12, 12, 12))
                     .addGroup(layout.createSequentialGroup()
+                        .addGap(0, 81, Short.MAX_VALUE)
+                        .addComponent(refreshConnections, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textLog, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(7, 7, 7)
-                        .addComponent(textInputArea, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(sendMessageButton, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(filterCheckbox, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addComponent(disconnectButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(leaveRoomButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(exportChatLogButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(chatlogFilters, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                            .addComponent(sendMessageButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 54, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
 
@@ -350,6 +369,7 @@ public class SwingGUI extends javax.swing.JFrame {
     private void disconnectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_disconnectButtonActionPerformed
         try {
             client.disconnect();
+             inRoom = false;
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -361,7 +381,6 @@ public class SwingGUI extends javax.swing.JFrame {
             if (inRoom) {
                 client.leaveRoom();
                 inRoom = false;
-                setConnectionsArea(client.viewAllConnections());
             }
         } catch (RemoteException e) {
 
@@ -399,10 +418,6 @@ public class SwingGUI extends javax.swing.JFrame {
     private void connectionsScrollPanelComponentAdded(java.awt.event.ContainerEvent evt) {//GEN-FIRST:event_connectionsScrollPanelComponentAdded
         // TODO add your handling code here:
     }//GEN-LAST:event_connectionsScrollPanelComponentAdded
-
-    private void textInputAreaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_textInputAreaActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_textInputAreaActionPerformed
 
     private void roomPasswordSubmitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roomPasswordSubmitActionPerformed
         // TODO add your handling code here:
@@ -487,7 +502,6 @@ public class SwingGUI extends javax.swing.JFrame {
             String message = "You have entered a room: " + client.getActiveRoomName();
             Message joinRoomMessage = new Message(client.getUsername(), client.getUsername(), message, 2);
             updateChatlog(joinRoomMessage);
-            setConnectionsArea(client.viewAllConnections());
             inRoom = true;
         } catch (RemoteException e) {
 
@@ -504,6 +518,7 @@ public class SwingGUI extends javax.swing.JFrame {
         for (ConnectionEntry entry : connections.getAllConnections()) {
             final String entryName = entry.getName();
             String label = i + ":" + entryName;
+            JLabel connectionDesc = new JLabel(entry.getDesc());
             JButton newInteractionButton = new JButton(label);
             newInteractionButton.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -511,6 +526,8 @@ public class SwingGUI extends javax.swing.JFrame {
                 }
             });
             connectionsPanel.add(newInteractionButton);
+            connectionsPanel.add(connectionDesc);
+            connectionsPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
             i++;
         }
         pack();
@@ -565,11 +582,12 @@ public class SwingGUI extends javax.swing.JFrame {
      */
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel chatlogFilters;
     private javax.swing.JPanel connectionsPanel;
     private javax.swing.JScrollPane connectionsScrollPanel;
     private javax.swing.JButton disconnectButton;
     private javax.swing.JButton exportChatLogButton;
-    private java.awt.Checkbox filterCheckbox;
+    private javax.swing.ButtonGroup filtersMsg;
     private javax.swing.JScrollPane interactablePanel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -579,9 +597,10 @@ public class SwingGUI extends javax.swing.JFrame {
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JTextArea jTextArea1;
     private javax.swing.JButton leaveRoomButton;
     private javax.swing.JPanel passwordFormPanel;
     private javax.swing.JTextField pmField;
@@ -592,7 +611,6 @@ public class SwingGUI extends javax.swing.JFrame {
     private javax.swing.JTextField roomPasswordEntry;
     private javax.swing.JButton roomPasswordSubmit;
     private javax.swing.JButton sendMessageButton;
-    private javax.swing.JTextField textInputArea;
     private java.awt.TextArea textLog;
     private javax.swing.JLabel welcomeLabel;
     // End of variables declaration//GEN-END:variables

@@ -78,13 +78,19 @@ public class ConnectionHandler implements Runnable{
                         if(commandWords.length >=  2) 
                         {
                             username = commandWords[1];
-                        if (commandWords.length ==  3 && server.isAUser(username))
+                            boolean isAUser = false;
+                            try {
+                                isAUser = server.isAUser(username);
+                            } catch (ConnectException e)
+                            {  
+                            }
+                        if (commandWords.length ==  3 && !isAUser)
                         {
                             password = commandWords[2];
                             boolean correctDetails = false;
                                 try {
                                     correctDetails = server.login(username, password);
-                                } catch (java.rmi.ConnectException ex) {
+                                } catch (ConnectException ex) {
                                     Logger.getLogger(ConnectionHandler.class.getName()).log(Level.SEVERE, null, ex);
                                 }
                             if (correctDetails) {
@@ -101,13 +107,13 @@ public class ConnectionHandler implements Runnable{
                                 returnMsg = "Incorrect Username/Password details";
                                 responseCode = 401;
                             }
-                        } else if (commandWords.length == 2 && !server.isAUser(username)) {
+                        } else if (commandWords.length == 2 && !isAUser) {
                             System.out.println("Guest");
-                            server.createGuestAccount(username);
                             boolean successful = false;
                                 try {
+                                    server.createGuestAccount(username);
                                     successful = server.login(username, "GUESTSESSION");
-                                } catch (java.rmi.ConnectException ex) {
+                                } catch (ConnectException ex) {
                                     Logger.getLogger(ConnectionHandler.class.getName()).log(Level.SEVERE, null, ex);
                                 }
                                 if (successful)
@@ -132,16 +138,22 @@ public class ConnectionHandler implements Runnable{
                 if (commandWords.length >=  2)
                 {
                     String username = commandWords[1];
-                    if (!server.isAUser(username))
+                    username = commandWords[1];
+                    boolean isAUser = false;
+                        try {
+                            isAUser = server.isAUser(username);
+                        } catch (ConnectException e)
+                       {  }
+                    if (isAUser)
                     {
                         if (commandWords.length >= 3)
                         {
                         String password = commandWords[2];
-                        server.createAccount(username, password);
                         boolean creationSuccess = false;
                             try {
+                                server.createAccount(username, password);
                                 creationSuccess = server.login(username, password);
-                            } catch (java.rmi.ConnectException ex) {
+                            } catch (ConnectException ex) {
                                 Logger.getLogger(ConnectionHandler.class.getName()).log(Level.SEVERE, null, ex);
                             }
                         responseCode = 400;
@@ -152,11 +164,11 @@ public class ConnectionHandler implements Runnable{
                             returnMsg = "Account creation success";
                         }
                         } else {
-                        server.createGuestAccount(username);
                         boolean guestCreationSuccess = false;
                             try {
+                                server.createGuestAccount(username);
                                 guestCreationSuccess = server.login(username, "GUESTSESSION");
-                            } catch (java.rmi.ConnectException ex) {
+                            } catch (ConnectException ex) {
                                 Logger.getLogger(ConnectionHandler.class.getName()).log(Level.SEVERE, null, ex);
                             }
                         if (guestCreationSuccess) {

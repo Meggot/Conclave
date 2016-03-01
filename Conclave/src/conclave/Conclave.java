@@ -22,6 +22,10 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 
@@ -45,6 +49,7 @@ public class Conclave implements Remote{
     private Conclave()
     {
         securityManager =  SecurityManager.getInstance();
+        //connectToDatabase();
         accountManager = new AccountManager();
         roomManager = RoomManager.getInstance();
         open = false;
@@ -53,6 +58,18 @@ public class Conclave implements Remote{
         } catch (UnknownHostException e)
         {
             System.out.println("A conclave server is already running on this IP and Port");
+        }
+    }
+    
+    private void connectToDatabase()
+    {
+        try {
+            Connection dbConnection = DriverManager.getConnection("jdbc:derby:Conclave;create=true");
+            DatabaseMetaData dbmd = dbConnection.getMetaData();
+            System.out.println(dbmd.getUserName());
+        } catch (SQLException e)
+        {
+            
         }
     }
     

@@ -24,13 +24,13 @@ public class MessageType implements Serializable{
     {
         String returnString = "";
         switch(type){
-            case 1:  returnString = "ROOM";
+            case 1:  returnString = "Room";
                      break;
-            case 2:  returnString = "SYSTEM";
+            case 2:  returnString = "System";
                      break;
-            case 3:  returnString = "ADMIN";
+            case 3:  returnString = "Admin";
                      break;
-            case 4:  returnString = "PRIVATE";
+            case 4:  returnString = "Private";
                      break;
         }
         return returnString;

@@ -40,4 +40,9 @@ public class Message implements Serializable {
     {
         return recipientId;
     }
+    
+    public String getType()
+    {
+        return messageType.getTypeText();
+    }
 }

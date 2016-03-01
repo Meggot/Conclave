@@ -29,11 +29,11 @@ import javax.swing.text.MaskFormatter;
  * @author BradleyW
  */
 public class SwingGUI extends javax.swing.JFrame {
-
-    private ArrayList<JButton> connectionButtons = new ArrayList<JButton>();
+    
     public UserInterface client;
     private boolean inRoom;
     private int lastMessageLine;
+    private ArrayList<String> chatlogViewCategories = new ArrayList<String>();
 
     public SwingGUI(UserInterface ui) {
         try {
@@ -44,32 +44,11 @@ public class SwingGUI extends javax.swing.JFrame {
             setConnectionsArea(client.viewAllConnections());
             setVisible(true);
             startChatLogUpdates();
-            formatTextSuffix();
         } catch (RemoteException e) {
             e.printStackTrace();
         }
     }
     
-    private void addMsgFilter()
-    {
-        chatlogFilters.add(filtersMsg);
-    }
-    
-    private void formatTextSuffix()
-    {
-        try {
-            String username = client.getUsername();
-            MaskFormatter usernameMask = new MaskFormatter(username + ": ");
-            usernameMask.install(textInputArea);
-            textInputArea.setColumns(20);
-        } catch (RemoteException e)
-        {
-            
-        } catch (ParseException e){
-            
-        }
-    }
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -107,9 +86,14 @@ public class SwingGUI extends javax.swing.JFrame {
         disconnectButton = new javax.swing.JButton();
         leaveRoomButton = new javax.swing.JButton();
         jScrollPane3 = new javax.swing.JScrollPane();
-        jTextArea1 = new javax.swing.JTextArea();
+        textInputArea = new javax.swing.JTextArea();
         exportChatLogButton = new javax.swing.JButton();
-        chatlogFilters = new javax.swing.JPanel();
+        chatlogFilterPanel = new javax.swing.JPanel();
+        roomFilterCheckbox = new javax.swing.JCheckBox();
+        systemFilterCheckbox = new javax.swing.JCheckBox();
+        privateFilterCheckbox = new javax.swing.JCheckBox();
+        adminFilterCheckbox = new javax.swing.JCheckBox();
+        filterLabel = new javax.swing.JLabel();
 
         jMenuItem1.setText("jMenuItem1");
 
@@ -236,7 +220,7 @@ public class SwingGUI extends javax.swing.JFrame {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 450, Short.MAX_VALUE)
+            .addGap(0, 448, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -252,7 +236,7 @@ public class SwingGUI extends javax.swing.JFrame {
 
         welcomeLabel.setText("Welcome to Conclave");
 
-        refreshConnections.setText("Refresh");
+        refreshConnections.setText("Refresh Connections");
         refreshConnections.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 refreshConnectionsActionPerformed(evt);
@@ -273,10 +257,10 @@ public class SwingGUI extends javax.swing.JFrame {
             }
         });
 
-        jTextArea1.setColumns(20);
-        jTextArea1.setFont(new java.awt.Font("Monospaced", 0, 14)); // NOI18N
-        jTextArea1.setRows(5);
-        jScrollPane3.setViewportView(jTextArea1);
+        textInputArea.setColumns(20);
+        textInputArea.setFont(new java.awt.Font("Monospaced", 0, 14)); // NOI18N
+        textInputArea.setRows(5);
+        jScrollPane3.setViewportView(textInputArea);
 
         exportChatLogButton.setText("Export ChatLog");
         exportChatLogButton.addActionListener(new java.awt.event.ActionListener() {
@@ -285,15 +269,70 @@ public class SwingGUI extends javax.swing.JFrame {
             }
         });
 
-        javax.swing.GroupLayout chatlogFiltersLayout = new javax.swing.GroupLayout(chatlogFilters);
-        chatlogFilters.setLayout(chatlogFiltersLayout);
-        chatlogFiltersLayout.setHorizontalGroup(
-            chatlogFiltersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+        roomFilterCheckbox.setSelected(true);
+        roomFilterCheckbox.setText("View Room Messages");
+        roomFilterCheckbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                roomFilterCheckboxActionPerformed(evt);
+            }
+        });
+
+        systemFilterCheckbox.setSelected(true);
+        systemFilterCheckbox.setText("View System Messages");
+        systemFilterCheckbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                systemFilterCheckboxActionPerformed(evt);
+            }
+        });
+
+        privateFilterCheckbox.setSelected(true);
+        privateFilterCheckbox.setText("View Private Messages");
+        privateFilterCheckbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                privateFilterCheckboxActionPerformed(evt);
+            }
+        });
+
+        adminFilterCheckbox.setSelected(true);
+        adminFilterCheckbox.setText("View Admin Messages");
+        adminFilterCheckbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                adminFilterCheckboxActionPerformed(evt);
+            }
+        });
+
+        filterLabel.setText("Filter Chatlog messages:");
+
+        javax.swing.GroupLayout chatlogFilterPanelLayout = new javax.swing.GroupLayout(chatlogFilterPanel);
+        chatlogFilterPanel.setLayout(chatlogFilterPanelLayout);
+        chatlogFilterPanelLayout.setHorizontalGroup(
+            chatlogFilterPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(chatlogFilterPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(chatlogFilterPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(roomFilterCheckbox)
+                    .addComponent(systemFilterCheckbox)
+                    .addComponent(privateFilterCheckbox)
+                    .addComponent(adminFilterCheckbox))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, chatlogFilterPanelLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(filterLabel)
+                .addGap(29, 29, 29))
         );
-        chatlogFiltersLayout.setVerticalGroup(
-            chatlogFiltersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 60, Short.MAX_VALUE)
+        chatlogFilterPanelLayout.setVerticalGroup(
+            chatlogFilterPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, chatlogFilterPanelLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(filterLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(roomFilterCheckbox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(systemFilterCheckbox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(privateFilterCheckbox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(adminFilterCheckbox))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -303,14 +342,14 @@ public class SwingGUI extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(connectionsScrollPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 6, Short.MAX_VALUE))
                     .addComponent(refreshConnections, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(disconnectButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(leaveRoomButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(exportChatLogButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(chatlogFilters, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(chatlogFilterPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(connectionsScrollPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 8, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(textLog, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -337,13 +376,9 @@ public class SwingGUI extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(connectionsScrollPanel)
                     .addComponent(jScrollPane2))
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textLog, javax.swing.GroupLayout.DEFAULT_SIZE, 185, Short.MAX_VALUE)
-                        .addGap(12, 12, 12))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(47, 47, 47)
                         .addComponent(refreshConnections, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(disconnectButton)
@@ -351,10 +386,11 @@ public class SwingGUI extends javax.swing.JFrame {
                         .addComponent(leaveRoomButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(exportChatLogButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(chatlogFilters, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(chatlogFilterPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(textLog, javax.swing.GroupLayout.DEFAULT_SIZE, 185, Short.MAX_VALUE)
+                        .addGap(12, 12, 12)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                             .addComponent(sendMessageButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 54, Short.MAX_VALUE))
@@ -431,6 +467,51 @@ public class SwingGUI extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_pmSendButtonActionPerformed
 
+    private void roomFilterCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roomFilterCheckboxActionPerformed
+        if (!chatlogViewCategories.contains("Room"))
+        {
+            chatlogViewCategories.add("Room");
+        } else {
+            chatlogViewCategories.remove("Room");
+        }
+        resetChatlogView();
+    }//GEN-LAST:event_roomFilterCheckboxActionPerformed
+
+    private void systemFilterCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_systemFilterCheckboxActionPerformed
+        if (!chatlogViewCategories.contains("System"))
+        {
+            chatlogViewCategories.add("System");
+        } else {
+            chatlogViewCategories.remove("System");
+        }
+        resetChatlogView();
+    }//GEN-LAST:event_systemFilterCheckboxActionPerformed
+
+    private void privateFilterCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_privateFilterCheckboxActionPerformed
+        if (!chatlogViewCategories.contains("Private"))
+        {
+            chatlogViewCategories.add("Private");
+        } else {
+            chatlogViewCategories.remove("Private");
+        }
+        resetChatlogView();
+    }//GEN-LAST:event_privateFilterCheckboxActionPerformed
+
+    private void adminFilterCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_adminFilterCheckboxActionPerformed
+        if (!chatlogViewCategories.contains("Admin"))
+        {
+            chatlogViewCategories.add("Admin");
+        } else {
+            chatlogViewCategories.remove("Admin");
+        }
+        resetChatlogView();
+    }//GEN-LAST:event_adminFilterCheckboxActionPerformed
+
+    private void resetChatlogView()
+    {
+        lastMessageLine = 0;
+    }
+    
     private void interactConnection(java.awt.event.ActionEvent evt, String entryName) {
         try {
             if (!inRoom) {
@@ -551,6 +632,7 @@ public class SwingGUI extends javax.swing.JFrame {
                                 }
                             }
                         }
+                        lastMessageLine = lstMsgClient;
                         Thread.sleep(500);
                     }
                 } catch (RemoteException e) {
@@ -563,18 +645,12 @@ public class SwingGUI extends javax.swing.JFrame {
         chatLogUpdates.start();
     }
 
-    private void updateChatlog(Message msg) {
-        try {
-        if (msg != null) {
+    private void updateChatlog(Message msg) 
+    {
+        if (msg != null && chatlogViewCategories.contains(msg.getType())) {
             textLog.append(msg.msgDisplay());
             textLog.append("\n");
-            int lstMsgClient = client.getLastMessageLine();
-            lastMessageLine = lstMsgClient;
             pack();
-        }
-        } catch (RemoteException e)
-        {
-            
         }
     }
     /**
@@ -582,11 +658,13 @@ public class SwingGUI extends javax.swing.JFrame {
      */
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel chatlogFilters;
+    private javax.swing.JCheckBox adminFilterCheckbox;
+    private javax.swing.JPanel chatlogFilterPanel;
     private javax.swing.JPanel connectionsPanel;
     private javax.swing.JScrollPane connectionsScrollPanel;
     private javax.swing.JButton disconnectButton;
     private javax.swing.JButton exportChatLogButton;
+    private javax.swing.JLabel filterLabel;
     private javax.swing.ButtonGroup filtersMsg;
     private javax.swing.JScrollPane interactablePanel;
     private javax.swing.JLabel jLabel1;
@@ -600,17 +678,20 @@ public class SwingGUI extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JTextArea jTextArea1;
     private javax.swing.JButton leaveRoomButton;
     private javax.swing.JPanel passwordFormPanel;
     private javax.swing.JTextField pmField;
     private javax.swing.JLabel pmLabel;
     private java.awt.Button pmSendButton;
+    private javax.swing.JCheckBox privateFilterCheckbox;
     private javax.swing.JPanel privateMsgPanel;
     private javax.swing.JButton refreshConnections;
+    private javax.swing.JCheckBox roomFilterCheckbox;
     private javax.swing.JTextField roomPasswordEntry;
     private javax.swing.JButton roomPasswordSubmit;
     private javax.swing.JButton sendMessageButton;
+    private javax.swing.JCheckBox systemFilterCheckbox;
+    private javax.swing.JTextArea textInputArea;
     private java.awt.TextArea textLog;
     private javax.swing.JLabel welcomeLabel;
     // End of variables declaration//GEN-END:variables

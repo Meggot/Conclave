@@ -24,6 +24,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 
@@ -52,13 +53,19 @@ public class SwingGUI extends javax.swing.JFrame {
             chatlogViewCategories.add("System");
             chatlogViewCategories.add("Private");
             chatlogViewCategories.add("Admin");
+            initilizeTabs();
             startChatLogUpdates();
             pack();
         } catch (RemoteException e) {
             e.printStackTrace();
         }
     }
-
+    private void initilizeTabs()
+    {
+        JPanel configurationPanel = new JPanel();
+        tabbedPanel.add("Main", interactablePanel);
+        tabbedPanel.add("Configuration", configurationPanel);
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -101,6 +108,7 @@ public class SwingGUI extends javax.swing.JFrame {
         privateFilterCheckbox = new javax.swing.JCheckBox();
         adminFilterCheckbox = new javax.swing.JCheckBox();
         filterLabel = new javax.swing.JLabel();
+        tabbedPanel = new javax.swing.JTabbedPane();
         interactablePanel = new javax.swing.JPanel();
 
         jMenuItem1.setText("jMenuItem1");
@@ -213,7 +221,7 @@ public class SwingGUI extends javax.swing.JFrame {
         connectionsPanel.setLayout(connectionsPanelLayout);
         connectionsPanelLayout.setHorizontalGroup(
             connectionsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 461, Short.MAX_VALUE)
+            .addGap(0, 610, Short.MAX_VALUE)
         );
         connectionsPanelLayout.setVerticalGroup(
             connectionsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -313,7 +321,7 @@ public class SwingGUI extends javax.swing.JFrame {
                     .addComponent(adminFilterCheckbox))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, chatlogFilterPanelLayout.createSequentialGroup()
-                .addContainerGap(28, Short.MAX_VALUE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(filterLabel)
                 .addGap(29, 29, 29))
         );
@@ -333,6 +341,7 @@ public class SwingGUI extends javax.swing.JFrame {
         );
 
         interactablePanel.setMaximumSize(new java.awt.Dimension(1000, 800));
+        tabbedPanel.addTab("Main", interactablePanel);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -346,10 +355,10 @@ public class SwingGUI extends javax.swing.JFrame {
                     .addComponent(leaveRoomButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(exportChatLogButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(chatlogFilterPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(connectionsScrollPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 175, Short.MAX_VALUE)
+                    .addComponent(connectionsScrollPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(welcomeLabel)))
+                        .addComponent(welcomeLabel)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -359,18 +368,19 @@ public class SwingGUI extends javax.swing.JFrame {
                     .addComponent(textLog, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(interactablePanel, javax.swing.GroupLayout.PREFERRED_SIZE, 804, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(tabbedPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 745, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(6, 6, 6)
-                .addComponent(welcomeLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(interactablePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(connectionsScrollPanel))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(welcomeLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(connectionsScrollPanel))
+                    .addComponent(tabbedPanel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
@@ -715,6 +725,7 @@ public class SwingGUI extends javax.swing.JFrame {
     private javax.swing.JButton roomPasswordSubmit;
     private javax.swing.JButton sendMessageButton;
     private javax.swing.JCheckBox systemFilterCheckbox;
+    private javax.swing.JTabbedPane tabbedPanel;
     private javax.swing.JTextArea textInputArea;
     private java.awt.TextArea textLog;
     private javax.swing.JLabel welcomeLabel;

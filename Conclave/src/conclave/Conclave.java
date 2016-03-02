@@ -152,6 +152,7 @@ public class Conclave implements Remote{
         try {
             roomManager.createRoom("TestRoom", "Testicles", 1);
             roomManager.mountOpenRoom("Open Room", 1);
+            roomManager.mountOpenRoom("Conclave Room", 2);
             roomManager.loadRoom("TestRoom");
         } catch (RemoteException e)
         {

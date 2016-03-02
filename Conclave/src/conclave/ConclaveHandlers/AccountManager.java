@@ -69,11 +69,15 @@ public class AccountManager {
     
     public Account getUserByName(String username) throws ConnectException
     {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConclavePU");
-        EntityManager manager = emf.createEntityManager();
-        Query query = manager.createNamedQuery("Account.findByUsername");
-        query.setParameter("username", username);
-        Account returnedAccount = (Account) query.getSingleResult();
+        Account returnedAccount = null;
+        if (isAUser(username))
+        {
+            EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConclavePU");
+            EntityManager manager = emf.createEntityManager();
+            Query query = manager.createNamedQuery("Account.findByUsername");
+            query.setParameter("username", username);
+            returnedAccount = (Account) query.getSingleResult();
+        }
         return returnedAccount;
     }
     

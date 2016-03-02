@@ -5,12 +5,15 @@
  */
 package conclave.interfaces;
 
+import com.github.sarxos.webcam.Webcam;
 import conclave.ConclaveHandlers.RoomManager;
 import conclave.db.Account;
 import conclave.model.Chatlog;
 import conclave.model.ConclaveRoom;
+import conclave.model.ConferenceRoom;
 import conclave.model.ConnectionsLog;
 import conclave.model.Message;
+import java.nio.ByteBuffer;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -34,9 +37,10 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
     private RoomManager roomListingsRoom;
     private final Chatlog chatLog;
     private int lastMessageLine;
-    
-    public UserInterfaceImpl(Account account) throws RemoteException
-    {
+    private Webcam activeWebcam;
+    private boolean activeWebcamUpdated;
+
+    public UserInterfaceImpl(Account account) throws RemoteException {
         lastMessageLine = 0;
         chatLog = new Chatlog();
         this.account = account;
@@ -45,88 +49,79 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
         connectionsUpdate = true;
         connectionsLog = new ConnectionsLog();
         roomListingsRoom = RoomManager.getInstance();
+        activeWebcam = null;
     }
-    
+
     @Override
-    public String getActiveRoomName() throws RemoteException
-    {
-        if (inRoom)
-        {
+    public String getActiveRoomName() throws RemoteException {
+        if (inRoom) {
             return activeRoom.getRoomName();
         } else {
             return null;
         }
     }
-    
+
     @Override
-    public boolean hasPassword(String entryname) throws RemoteException
-    {
+    public boolean hasPassword(String entryname) throws RemoteException {
         return roomListingsRoom.hasPassword(entryname);
     }
-    
+
     @Override
-    public boolean joinRoom(String entryName, String password) throws RemoteException
-    {
+    public boolean joinRoom(String entryName, String password) throws RemoteException {
         boolean ok = false;
         try {
-        if (connected && !inRoom && roomListingsRoom.hasPassword(entryName) && roomListingsRoom.valdiateRoom(entryName, password))
-        {
-             final Registry registry = LocateRegistry.getRegistry(9807);
-                activeRoom = (ConclaveRoom) registry.lookup(entryName);
-                String username = account.getUsername();
-                activeRoom.addUser(username, this);
-                connectionsLog = activeRoom.getAllConnections();
-                System.out.println("Validated and joining room.");
-                inRoom = true;
-                ok = true;
-        }
-        } catch (NotBoundException e)
-        {
-            e.printStackTrace();
-        }
-        return ok;
-    }
-    @Override
-    public boolean joinRoom(String entryName) throws RemoteException 
-    {
-        boolean ok = false;
-        try {
-            if (connected && !inRoom && !roomListingsRoom.hasPassword(entryName))
-            {
+            if (connected && !inRoom && roomListingsRoom.hasPassword(entryName) && roomListingsRoom.valdiateRoom(entryName, password)) {
                 final Registry registry = LocateRegistry.getRegistry(9807);
                 activeRoom = (ConclaveRoom) registry.lookup(entryName);
                 String username = account.getUsername();
                 activeRoom.addUser(username, this);
                 connectionsLog = activeRoom.getAllConnections();
-                System.out.println("Joining room.");
                 inRoom = true;
                 ok = true;
+                connectionsUpdate = true;
             }
-        } catch (NotBoundException e)
-        {
+        } catch (NotBoundException e) {
             e.printStackTrace();
         }
         return ok;
-    } 
+    }
+
+    @Override
+    public boolean joinRoom(String entryName) throws RemoteException {
+        boolean ok = false;
+        try {
+            if (connected && !inRoom && !roomListingsRoom.hasPassword(entryName)) {
+                final Registry registry = LocateRegistry.getRegistry(9807);
+                activeRoom = (ConclaveRoom) registry.lookup(entryName);
+                String username = account.getUsername();
+                activeRoom.addUser(username, this);
+                connectionsLog = activeRoom.getAllConnections();
+                inRoom = true;
+                ok = true;
+                connectionsUpdate = true;
+            }
+        } catch (NotBoundException e) {
+            e.printStackTrace();
+        }
+        return ok;
+    }
 
     @Override
     public void leaveRoom() throws RemoteException {
-        if (inRoom && connected)
-        {
+        if (inRoom && connected) {
             String username = account.getUsername();
             String roomname = activeRoom.getRoomName();
             activeRoom.removeUser(username);
             activeRoom = null;
             inRoom = false;
             connectionsLog = roomListingsRoom.returnRooms();
+            connectionsUpdate = true;
         }
     }
 
     @Override
-    public void postMessage(String message) throws RemoteException
-    {
-        if (inRoom && connected)
-        {
+    public void postMessage(String message) throws RemoteException {
+        if (inRoom && connected) {
             String username = getUsername();
             String roomId = activeRoom.getRoomName();
             Message newMessage;
@@ -136,9 +131,8 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
     }
 
     @Override
-    public void updateChatLog(Message message) throws RemoteException{
-        if (message!=null)
-        {
+    public void updateChatLog(Message message) throws RemoteException {
+        if (message != null) {
             chatLog.addMessage(message);
             lastMessageLine++;
         } else {
@@ -147,9 +141,8 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
     }
 
     @Override
-    public Account getAccount() throws RemoteException{
-        if (connected && account!=null)
-        {
+    public Account getAccount() throws RemoteException {
+        if (connected && account != null) {
             return account;
         }
         return null;
@@ -164,19 +157,16 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
     @Override
     public ConnectionsLog viewAllConnections() throws RemoteException {
         connectionsUpdate = false;
-        if (!inRoom)
-        {
+        if (!inRoom) {
             return roomListingsRoom.returnRooms();
-        } else
-        {
+        } else {
             return activeRoom.getAllConnections();
         }
     }
 
     @Override
     public void sendPrivateMessage(String message, String recipientID) throws RemoteException {
-        if (connected && inRoom)
-        {
+        if (connected && inRoom) {
             Message privateSentMessage = new Message(account.getUsername(), recipientID, message, 4);
             activeRoom.whisper(privateSentMessage);
         }
@@ -193,35 +183,34 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
         leaveRoom();
         disconnect();
     }
+
     @Override
     public boolean isConnected() throws RemoteException {
         return connected;
     }
+
     @Override
-    public void connect() throws RemoteException
-    {
+    public void connect() throws RemoteException {
         connected = true;
     }
+
     @Override
-    public void disconnect() throws RemoteException
-    {
+    public void disconnect() throws RemoteException {
         connected = false;
     }
+
     @Override
-    public String getUsername() throws RemoteException
-    {
+    public String getUsername() throws RemoteException {
         return account.getUsername();
     }
-    
+
     @Override
-    public String exportChatLog()
-    {
+    public String exportChatLog() {
         return chatLog.viewEntries();
     }
 
     @Override
-    public LinkedList<Message> getChatlogUpdates(int lstMsgRecieved) throws RemoteException 
-    {
+    public LinkedList<Message> getChatlogUpdates(int lstMsgRecieved) throws RemoteException {
         LinkedList<Message> returnArray = chatLog.getAllEntriesAfter(lstMsgRecieved);
         return returnArray;
     }
@@ -234,5 +223,10 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
     @Override
     public boolean hasConnectionsUpdated() throws RemoteException {
         return connectionsUpdate;
+    }
+
+    @Override
+    public int getRoomType() throws RemoteException {
+        return activeRoom.getType();
     }
 }

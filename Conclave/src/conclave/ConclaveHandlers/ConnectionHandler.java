@@ -84,7 +84,7 @@ public class ConnectionHandler implements Runnable{
                             } catch (ConnectException e)
                             {  
                             }
-                        if (commandWords.length ==  3 && !isAUser)
+                        if (commandWords.length ==  3 && isAUser)
                         {
                             password = commandWords[2];
                             boolean correctDetails = false;
@@ -107,7 +107,7 @@ public class ConnectionHandler implements Runnable{
                                 returnMsg = "Incorrect Username/Password details";
                                 responseCode = 401;
                             }
-                        } else if (commandWords.length == 2 && !isAUser) {
+                        } else if (commandWords.length == 2 && isAUser) {
                             System.out.println("Guest");
                             boolean successful = false;
                                 try {
@@ -144,7 +144,7 @@ public class ConnectionHandler implements Runnable{
                             isAUser = server.isAUser(username);
                         } catch (ConnectException e)
                        {  }
-                    if (isAUser)
+                    if (!isAUser)
                     {
                         if (commandWords.length >= 3)
                         {

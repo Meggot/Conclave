@@ -27,6 +27,7 @@ public interface ConclaveRoom extends Remote{
     public boolean isVisiblity() throws RemoteException;
     public boolean isOnline() throws RemoteException;
     public String getInfo() throws RemoteException;
+    public int getType() throws RemoteException;
     public void updateAllClientsConnections() throws RemoteException;
     public ConnectionsLog getAllConnections() throws RemoteException;
     public void whisper(Message msg) throws RemoteException;

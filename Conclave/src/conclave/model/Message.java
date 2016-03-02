@@ -32,7 +32,7 @@ public class Message implements Serializable {
     
     public String msgDisplay()
     {
-        String returnString = "[ " + timestamp.toString() + "] " + sender + ": " + msg;
+        String returnString = "[ " + timestamp.toString() + "] " + getType() + ": " + sender + ": " + msg;
         return returnString;
     }
     

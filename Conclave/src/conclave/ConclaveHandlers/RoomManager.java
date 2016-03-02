@@ -8,6 +8,7 @@ package conclave.ConclaveHandlers;
 import conclave.db.Room;
 import conclave.interfaces.RoomManagerInterface;
 import conclave.model.ConclaveRoom;
+import conclave.model.ConferenceRoom;
 import conclave.model.ConnectionsLog;
 import conclave.model.TextRoom;
 import java.rmi.AlreadyBoundException;
@@ -49,25 +50,28 @@ public class RoomManager implements RoomManagerInterface {
     }
 
     @Override //This does not need to be added to the Persistence Database, thus it is just added to the hostedRooms.
-    public boolean mountOpenRoom(String roomname, int roomType) throws RemoteException
-    {
+    public boolean mountOpenRoom(String roomname, int roomType) throws RemoteException {
         boolean ok = false;
         try {
-        ConclaveRoom room;
-        switch (String.valueOf(roomType)) {
-                        case "1":
-                            room = new TextRoom(roomname);
-                            hostedRooms.put(roomname, room);
-                            roomConnections.addConnection(roomname, room.getInfo());
-                            Registry reg = LocateRegistry.getRegistry(9807);
-                            reg.bind(room.getRoomName(), room);
-                            System.out.println("Room: " + roomname +" is bound to registry.");
-                            ok = true;
-                            break;
-        }
-        } catch (AlreadyBoundException e)
-        {
-            
+            ConclaveRoom room = null;
+            switch (String.valueOf(roomType)) {
+                case "1":
+                    room = new TextRoom(roomname);
+                    break;
+                case "2":
+                    room = new ConferenceRoom(roomname);
+                    break;
+            }
+            if (room != null) {
+                hostedRooms.put(roomname, room);
+                roomConnections.addConnection(roomname, room.getInfo());
+                Registry reg = LocateRegistry.getRegistry(9807);
+                reg.bind(room.getRoomName(), room);
+                System.out.println("Room: " + roomname + " is bound to registry.");
+                ok = true;
+            }
+        } catch (AlreadyBoundException e) {
+
         }
         return ok;
     }
@@ -117,7 +121,7 @@ public class RoomManager implements RoomManagerInterface {
                 roomConnections.addConnection(roomName, room.getInfo());
                 hostedRooms.put(roomName, room);
                 success = true;
-                System.out.println("Room: " + roomName +" is bound to registry.");
+                System.out.println("Room: " + roomName + " is bound to registry.");
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -161,6 +165,9 @@ public class RoomManager implements RoomManagerInterface {
                     switch (roomType) {
                         case "1":
                             returnRoom = new TextRoom(roomname);
+                            break;
+                        case "2":
+                            returnRoom = new ConferenceRoom(roomname);
                             break;
                     }
                 }
@@ -208,16 +215,13 @@ public class RoomManager implements RoomManagerInterface {
             hostedRooms.remove(roomname);
         }
     }
-    
+
     @Override
-    public boolean hasPassword(String roomname) throws RemoteException
-    {
+    public boolean hasPassword(String roomname) throws RemoteException {
         boolean has = false;
-        if (isARoom(roomname))
-        {
+        if (isARoom(roomname)) {
             Room room = getRoom(roomname);
-            if (room.getHashedpassword()!=null)
-            {
+            if (room.getHashedpassword() != null) {
                 has = true;
             }
         }
@@ -231,8 +235,7 @@ public class RoomManager implements RoomManagerInterface {
             Room room = getRoom(roomname);
             byte[] salt = room.getSalt();
             String enteredHashedPassword = sm.hashPassword(password, salt);
-            if (room.getHashedpassword().equals(enteredHashedPassword))
-            {
+            if (room.getHashedpassword().equals(enteredHashedPassword)) {
                 validated = true;
             }
         }
@@ -240,8 +243,7 @@ public class RoomManager implements RoomManagerInterface {
     }
 
     @Override
-    public Room getRoom(String roomname) throws RemoteException 
-    {
+    public Room getRoom(String roomname) throws RemoteException {
         Room returnedRoom = null;
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConclavePU");
         EntityManager manager = emf.createEntityManager();
@@ -252,7 +254,7 @@ public class RoomManager implements RoomManagerInterface {
             if (tmpRoomName.equals(roomname)) {
                 returnedRoom = room;
             }
-            
+
         }
         return returnedRoom;
     }

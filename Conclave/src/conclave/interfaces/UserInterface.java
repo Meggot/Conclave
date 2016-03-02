@@ -6,6 +6,7 @@
 package conclave.interfaces;
 
 
+import com.github.sarxos.webcam.Webcam;
 import conclave.model.ConnectionsLog;
 import conclave.db.Account;
 import conclave.model.ConclaveRoom;
@@ -40,6 +41,7 @@ public void disconnect() throws RemoteException;
 public boolean hasConnectionsUpdated() throws RemoteException;
 public String getUsername() throws RemoteException;
 public String getActiveRoomName() throws RemoteException;
+public int getRoomType() throws RemoteException;
 public LinkedList<Message> getChatlogUpdates(int lstMsgRecieved) throws RemoteException;
 public int getLastMessageLine() throws RemoteException;
 }

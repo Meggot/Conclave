@@ -17,13 +17,14 @@ import java.util.HashMap;
  */
 public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     
-    private String roomName;
-    private int roomLimit;
-    private HashMap<String, UserInterface> roomConnections;
-    private ConnectionsLog connectionsLog;
+    public String roomName;
+    public int roomLimit;
+    public HashMap<String, UserInterface> roomConnections;
+    public ConnectionsLog connectionsLog;
 
     private boolean visiblity;
     private boolean online;
+    public int roomType;
     
     public TextRoom(String iroomName) throws RemoteException{
         this.roomName = iroomName;
@@ -31,6 +32,8 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
         this.online = false;
         roomConnections = new HashMap<>();
         connectionsLog = new ConnectionsLog();
+        roomLimit = 20;
+        roomType = 1;
     }
     /**
      * CONTROL METHODS
@@ -55,9 +58,15 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     @Override
     public void addUser(String username, UserInterface user) throws RemoteException
     {
-        roomConnections.put(username, user);
-        connectionsLog.addConnection(username, "User");
-        updateAllClientsConnections();
+        if (roomConnections.size() <= roomLimit)
+        {
+            roomConnections.put(username, user);
+            connectionsLog.addConnection(username, "User");
+            String msg = "You have joined room: " + roomName;
+            Message welcomeMessage = new Message(roomName, username, msg, 2);
+            whisper(welcomeMessage);
+            updateAllClientsConnections();
+        }
     }
     
     @Override
@@ -121,7 +130,7 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     }
     @Override
     public String getInfo() throws RemoteException {
-        return "TextRoom: [" + roomName + "] " + roomConnections.size() + "/" + roomLimit;
+        return "[TextRoom] " + roomConnections.size() + "/" + roomLimit;
     }
     @Override   
     public ConnectionsLog getAllConnections() throws RemoteException
@@ -150,5 +159,10 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
         String recipientUsername = msg.getRecipientId();
         UserInterface ui = roomConnections.get(recipientUsername);
         ui.updateChatLog(msg);
+    }
+    
+    public int getType() throws RemoteException
+    {
+        return roomType;
     }
 }

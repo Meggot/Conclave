@@ -136,4 +136,14 @@ public class PacketUtil {
         }
         return entireRequest;
     }
+    
+    public void close()
+    {
+        try {
+            outSocket.close();
+        } catch (IOException e)
+        {
+            
+        }
+    }
 }

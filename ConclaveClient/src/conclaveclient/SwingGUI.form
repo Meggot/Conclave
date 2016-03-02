@@ -182,36 +182,31 @@
           <Group type="102" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="refreshConnections" alignment="0" max="32767" attributes="0"/>
-                  <Component id="disconnectButton" alignment="0" max="32767" attributes="0"/>
-                  <Component id="leaveRoomButton" alignment="0" max="32767" attributes="0"/>
-                  <Component id="exportChatLogButton" alignment="0" max="32767" attributes="0"/>
-                  <Component id="chatlogFilterPanel" alignment="1" max="32767" attributes="0"/>
+                  <Component id="refreshConnections" max="32767" attributes="0"/>
+                  <Component id="disconnectButton" max="32767" attributes="0"/>
+                  <Component id="leaveRoomButton" max="32767" attributes="0"/>
+                  <Component id="exportChatLogButton" max="32767" attributes="0"/>
+                  <Component id="chatlogFilterPanel" max="32767" attributes="0"/>
+                  <Component id="connectionsScrollPanel" alignment="0" pref="175" max="32767" attributes="0"/>
                   <Group type="102" attributes="0">
-                      <Component id="connectionsScrollPanel" min="-2" pref="175" max="-2" attributes="0"/>
-                      <EmptySpace min="0" pref="8" max="32767" attributes="0"/>
+                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      <Component id="welcomeLabel" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="1" attributes="0">
-                  <Component id="textLog" alignment="0" max="32767" attributes="0"/>
-                  <Group type="102" attributes="0">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="1" attributes="0">
                       <Component id="jScrollPane3" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="sendMessageButton" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <Group type="102" attributes="0">
-                      <EmptySpace min="-2" pref="311" max="-2" attributes="0"/>
-                      <Component id="jPanel1" max="32767" attributes="0"/>
+                  <Component id="textLog" max="32767" attributes="0"/>
+                  <Group type="102" alignment="1" attributes="0">
+                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      <Component id="interactablePanel" min="-2" pref="804" max="-2" attributes="0"/>
                   </Group>
-                  <Component id="jScrollPane2" max="32767" attributes="0"/>
               </Group>
-              <EmptySpace min="-2" max="-2" attributes="0"/>
-          </Group>
-          <Group type="102" alignment="1" attributes="0">
-              <EmptySpace max="32767" attributes="0"/>
-              <Component id="welcomeLabel" min="-2" max="-2" attributes="0"/>
-              <EmptySpace min="-2" pref="346" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -222,8 +217,8 @@
               <Component id="welcomeLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                  <Component id="interactablePanel" max="32767" attributes="0"/>
                   <Component id="connectionsScrollPanel" max="32767" attributes="0"/>
-                  <Component id="jScrollPane2" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="1" attributes="0">
@@ -239,32 +234,20 @@
                       <Component id="chatlogFilterPanel" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <Group type="102" attributes="0">
-                      <Component id="textLog" pref="185" max="32767" attributes="0"/>
+                      <Component id="textLog" max="32767" attributes="0"/>
                       <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="1" max="-2" attributes="0">
                           <Component id="jScrollPane3" pref="0" max="32767" attributes="0"/>
                           <Component id="sendMessageButton" alignment="0" pref="54" max="32767" attributes="0"/>
                       </Group>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jPanel1" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
-              <EmptySpace max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="17" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
   </Layout>
   <SubComponents>
-    <Container class="javax.swing.JScrollPane" name="jScrollPane2">
-
-      <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
-      <SubComponents>
-        <Container class="javax.swing.JScrollPane" name="interactablePanel">
-
-          <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
-        </Container>
-      </SubComponents>
-    </Container>
     <Container class="javax.swing.JScrollPane" name="connectionsScrollPanel">
       <Properties>
         <Property name="horizontalScrollBarPolicy" type="int" value="31"/>
@@ -280,12 +263,12 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <EmptySpace min="0" pref="173" max="32767" attributes="0"/>
+                  <EmptySpace min="0" pref="461" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <EmptySpace min="0" pref="255" max="32767" attributes="0"/>
+                  <EmptySpace min="0" pref="291" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
           </Layout>
@@ -293,22 +276,10 @@
       </SubComponents>
     </Container>
     <Component class="java.awt.TextArea" name="textLog">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+      </Properties>
     </Component>
-    <Container class="javax.swing.JPanel" name="jPanel1">
-
-      <Layout>
-        <DimensionLayout dim="0">
-          <Group type="103" groupAlignment="0" attributes="0">
-              <EmptySpace min="0" pref="448" max="32767" attributes="0"/>
-          </Group>
-        </DimensionLayout>
-        <DimensionLayout dim="1">
-          <Group type="103" groupAlignment="0" attributes="0">
-              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-          </Group>
-        </DimensionLayout>
-      </Layout>
-    </Container>
     <Component class="javax.swing.JButton" name="sendMessageButton">
       <Properties>
         <Property name="text" type="java.lang.String" value="--&gt;"/>
@@ -388,7 +359,7 @@
                   <EmptySpace max="32767" attributes="0"/>
               </Group>
               <Group type="102" alignment="1" attributes="0">
-                  <EmptySpace max="32767" attributes="0"/>
+                  <EmptySpace pref="28" max="32767" attributes="0"/>
                   <Component id="filterLabel" min="-2" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="29" max="-2" attributes="0"/>
               </Group>
@@ -454,6 +425,15 @@
           </Properties>
         </Component>
       </SubComponents>
+    </Container>
+    <Container class="javax.swing.JPanel" name="interactablePanel">
+      <Properties>
+        <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[1000, 800]"/>
+        </Property>
+      </Properties>
+
+      <Layout class="org.netbeans.modules.form.compat2.layouts.DesignFlowLayout"/>
     </Container>
   </SubComponents>
 </Form>

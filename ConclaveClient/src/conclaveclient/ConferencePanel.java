@@ -34,6 +34,7 @@ public class ConferencePanel extends javax.swing.JPanel {
 		panel.setImageSizeDisplayed(true);
 		panel.setMirrored(true);
 		panel1.add(panel);
+                panel1.setVisible(true);
     }
 
     /**

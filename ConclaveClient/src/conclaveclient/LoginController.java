@@ -76,7 +76,7 @@ public class LoginController {
         if (commandWords[0].contains("100") && (ui != null))
         {
             SwingGUI newSwingGui = new SwingGUI(ui);
-            System.out.println("Added swingGui to Observer.");
+            packetUtil.close();
         }
         } catch (UnknownHostException e) {
             returnString = "That conclave server is currently down";

@@ -258,6 +258,7 @@ public class LoginGUI extends javax.swing.JFrame {
         if (username!=null && password != null)
         {
             loginStatus = loginController.login(username, password);
+            this.setVisible(false);
         } else 
         {
             loginStatus = "You must enter all the fields";

@@ -11,9 +11,12 @@ import conclave.ConclaveHandlers.AccountManager;
 import com.github.sarxos.webcam.*;
 import conclave.ConclaveHandlers.RoomManager;
 import conclave.db.Account;
+import conclave.interfaces.AdminInterfaceImpl;
 import conclave.interfaces.UserInterface;
 import conclave.interfaces.UserInterfaceImpl;
 import conclave.model.ConnectionsLog;
+import conclave.model.Message;
+import conclave.model.ServerFrontpage;
 import conclave.rmiPolicy.RMISecurityPolicyLoader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -27,38 +30,38 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
-public class Conclave implements Remote{
+public class ServerController implements Remote{
     
     private String name;
     private String myUrl;
     private InetAddress ip;
     private int port;
     private boolean open;
-    private ArrayList<UserInterface> connections = new ArrayList<>();
+    private HashMap<String, UserInterface> connections = new HashMap<>();
     private ArrayList<String> serverAdmins = new ArrayList();
     
+    ServerFrontpage frontpage;
     ServerManager serverManager;
     AccountManager accountManager;
-    SecurityManager securityManager;
     RoomManager roomManager;
     
-    private static Conclave instance;
+    private static ServerController instance;
     
-    private Conclave()
+    private ServerController()
     {
-        securityManager =  SecurityManager.getInstance();
-        //connectToDatabase();
         accountManager = new AccountManager();
         roomManager = RoomManager.getInstance();
+        frontpage = new ServerFrontpage();
         open = false;
-        try {
-            this.ip = InetAddress.getByName("192.168.0.20");
-        } catch (UnknownHostException e)
-        {
-            System.out.println("A conclave server is already running on this IP and Port");
-        }
+        this.ip = null;
+        this.name = "Conclave Testing Server";
+        frontpage.addNewAnnouncment(name, "Welcome to Bradley's server.");
     }
     
     private void connectToDatabase()
@@ -88,10 +91,10 @@ public class Conclave implements Remote{
         }
     }
     
-    public static synchronized Conclave getInstance() 
+    public static synchronized ServerController getInstance() 
     {
         if (instance == null) {
-                instance = new Conclave();}
+                instance = new ServerController();}
         return instance;
     }
     
@@ -110,6 +113,11 @@ public class Conclave implements Remote{
         this.port = port;
     }
     
+    public void setIp(InetAddress ip)
+    {
+        this.ip = ip;
+    }
+    
     public void startServer()
     {
         loadRMI();
@@ -121,7 +129,7 @@ public class Conclave implements Remote{
     public String viewAllConnections()
     {
         String returnString = "";
-        for (UserInterface connection : connections)
+        for (UserInterface connection : connections.values())
         {
             //returnString = returnString + " Thread#: " + connection.getUserName();
         }
@@ -140,11 +148,35 @@ public class Conclave implements Remote{
     
     public  boolean isAAdmin(String username)
     {
+        boolean isAdmin = false;
         if (serverAdmins.contains(username))
         {
-            return true;
+            isAdmin = true;
         }
-        return false;
+        return isAdmin;
+    }
+    
+    public void updateFrontpage(String username, String msg) 
+    {
+        frontpage.addNewAnnouncment(username, msg);
+        updateAllClientsFrontpage(username, msg);
+    }
+    
+    public void updateAllClientsFrontpage(String username, String msg)
+    {
+        for (UserInterface ui : connections.values())
+        {
+            try {
+                ui.updateFrontpage(username, msg);
+            } catch (RemoteException ex) {
+                Logger.getLogger(ServerController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    public List<String> getFrontpage()
+    {
+        return new ArrayList(frontpage.getFrontpage());
     }
     
     public void startRooms()
@@ -198,17 +230,20 @@ public class Conclave implements Remote{
         String username = returnedAccount.getUsername();
         if (isAUser(username))
         {
-            UserInterfaceImpl newUI = new UserInterfaceImpl(returnedAccount);
+            UserInterface newUI;
+            if (isAAdmin(username))
+            {
+                newUI = new AdminInterfaceImpl(returnedAccount);
+            } else {
+                newUI = new UserInterfaceImpl(returnedAccount);
+            }
             newUI.updateConnections(roomManager.returnRooms());
+            newUI.setFrontpage(frontpage.getFrontpage());
             newUI.connect();
-            //if (isAAdmin(username))
-            //{
-                //newUI = new UserInterfaceImpl();
-            //}
             Registry registry = LocateRegistry.getRegistry( 9807);
             registry.rebind(username, newUI);
             System.out.println("UserInterface for " + username + "is bound");
-            connections.add(newUI);
+            connections.put(username, newUI);
         } else {
             System.out.println("User doesn't exist.");
         }
@@ -244,9 +279,19 @@ public class Conclave implements Remote{
             System.out.println("Cannot create account due to invalid username/password");
         }
     }
+    
+    public List<String> getAllConnectedUsernames() {
+        return new ArrayList(connections.keySet());
+    }
 
-    private void stopServer() 
+    public void stopServer() 
     {
         serverManager.stopServer();
+    }
+    
+    public void alertUser(Message msg, String username) throws RemoteException
+    {
+            UserInterface user = connections.get(username);
+            user.recievePrivateMessage(msg);
     }
 }

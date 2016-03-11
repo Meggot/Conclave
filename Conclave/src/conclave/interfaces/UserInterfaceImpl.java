@@ -8,17 +8,23 @@ package conclave.interfaces;
 import com.github.sarxos.webcam.Webcam;
 import conclave.ConclaveHandlers.RoomManager;
 import conclave.db.Account;
+import conclave.model.Announcement;
 import conclave.model.Chatlog;
 import conclave.model.ConclaveRoom;
 import conclave.model.ConferenceRoom;
 import conclave.model.ConnectionsLog;
 import conclave.model.Message;
+import conclave.model.ServerFrontpage;
+import java.awt.Dimension;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -31,6 +37,7 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
     private boolean inRoom;
     private boolean connected;
     private boolean connectionsUpdate;
+    private boolean frontpageUpdated;
     private Account account;
     private ConnectionsLog connectionsLog;
     private ConclaveRoom activeRoom;
@@ -39,6 +46,7 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
     private int lastMessageLine;
     private Webcam activeWebcam;
     private boolean activeWebcamUpdated;
+    private ServerFrontpage ownFrontpage;
 
     public UserInterfaceImpl(Account account) throws RemoteException {
         lastMessageLine = 0;
@@ -49,7 +57,9 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
         connectionsUpdate = true;
         connectionsLog = new ConnectionsLog();
         roomListingsRoom = RoomManager.getInstance();
+        ownFrontpage = new ServerFrontpage();
         activeWebcam = null;
+        frontpageUpdated = true;
     }
 
     @Override
@@ -116,6 +126,7 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
             inRoom = false;
             connectionsLog = roomListingsRoom.returnRooms();
             connectionsUpdate = true;
+            frontpageUpdated = true;
         }
     }
 
@@ -214,7 +225,7 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
         LinkedList<Message> returnArray = chatLog.getAllEntriesAfter(lstMsgRecieved);
         return returnArray;
     }
-
+    
     @Override
     public int getLastMessageLine() throws RemoteException {
         return lastMessageLine;
@@ -229,4 +240,85 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
     public int getRoomType() throws RemoteException {
         return activeRoom.getType();
     }
+    
+    public int getType() throws RemoteException
+    {
+        return 1;
+    }
+    
+    @Override
+    public List<Announcement> getFrontpage() throws RemoteException{
+        frontpageUpdated = false;
+        return new ArrayList(ownFrontpage.getFrontpage());
+    }
+    
+    @Override
+    public void setFrontpage(List<Announcement> frontPage) throws RemoteException{
+        ownFrontpage.setFrontpage(frontPage);
+        if (!inRoom)
+        {
+            frontpageUpdated = true;
+        }
+    }
+    @Override
+    public void updateFrontpage(String username, String announcment) throws RemoteException{
+        ownFrontpage.addNewAnnouncment(username, announcment);
+        if (!inRoom)
+        {
+            frontpageUpdated = true;
+        }
+    }
+    
+    @Override
+    public boolean hasFrontpageUpdated() throws RemoteException {
+        return frontpageUpdated;
+    }
+
+    @Override
+    public Dimension getConferenceDimension() throws RemoteException {
+        Dimension returnDimension = null;
+        if (activeRoom.getType() == 2)
+        {
+            IConferenceRoom conference = (IConferenceRoom) activeRoom;
+            returnDimension = conference.getDimension();
+        }
+        return returnDimension;
+    }
+    
+    @Override
+    public boolean isConferenceStreaming() throws RemoteException {
+        boolean isStreaming = true; //Because we don't want the user to be streaming, we must set it to be true in case of exception;
+        if (activeRoom.getType() == 2)
+        {
+            IConferenceRoom conference = (IConferenceRoom) activeRoom;
+            if (!conference.isStreaming())
+            {
+                isStreaming = false;
+            }
+        }
+        return isStreaming;
+    }
+
+    @Override
+    public InetSocketAddress getStreamerLocation() throws RemoteException {
+        if (activeRoom.getType() == 2)
+        {
+            IConferenceRoom conference = (IConferenceRoom) activeRoom;
+            return conference.getStreamerIp();
+        }
+        return null;
+    }
+    
+    public void broadcastToConference(InetSocketAddress loc, Dimension d) throws RemoteException
+    {
+         if (activeRoom.getType() == 2)
+         {
+             IConferenceRoom conference = (IConferenceRoom) activeRoom;
+             if (!conference.isStreaming())
+            {
+                conference.startBroadcasting(getUsername(), loc, d);
+            }
+         }
+    }
+    
 }

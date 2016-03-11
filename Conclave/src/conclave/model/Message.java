@@ -30,6 +30,11 @@ public class Message implements Serializable {
         messageType = new MessageType(messageTypei);
     }
     
+    public void setMsgText(String imsg)
+    {
+        this.msg = imsg;
+    }
+    
     public String msgDisplay()
     {
         String returnString = "[ " + timestamp.toString() + "] " + getType() + ": " + sender + ": " + msg;

@@ -10,6 +10,7 @@ import conclave.model.ConclaveRoom;
 import conclave.model.ConnectionsLog;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
 
 /**
  *
@@ -26,11 +27,12 @@ public interface RoomManagerInterface extends Remote {
     public ConnectionsLog returnRooms() throws RemoteException;
     public ConclaveRoom getConclaveRoom(String roomname) throws RemoteException;
     public Room getRoom(String roomname) throws RemoteException;
-    
+    public void openRoom(String roomname) throws RemoteException;
+    public void closeRoom(String roomname) throws RemoteException;
     public boolean loadRoom(String roomName) throws RemoteException;
     public void stopRoom(String roomname) throws RemoteException;
-    
-    public void kickUser(String username, String roomname) throws RemoteException;
-
+    public List<String> getAllRoomnames() throws RemoteException;
+    public void kickUser(String username, boolean banned) throws RemoteException;
+    public List<String> getAllSupportedRoomTypes() throws RemoteException;
     public boolean isARoom(String roomname) throws RemoteException;
 }

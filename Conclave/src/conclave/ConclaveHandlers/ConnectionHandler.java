@@ -5,7 +5,7 @@
  */
 package conclave.ConclaveHandlers;
 
-import conclave.Conclave;
+import conclave.ServerController;
 import conclave.db.Account;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 public class ConnectionHandler implements Runnable{
     
     private Socket sock;
-    private Conclave server;
+    private ServerController server;
     private int connectionid;
     
     private InputStream ins;
@@ -39,7 +39,7 @@ public class ConnectionHandler implements Runnable{
         this.sock = isock;
         ins = sock.getInputStream();
         os = sock.getOutputStream();
-        this.server = Conclave.getInstance();
+        this.server = ServerController.getInstance();
         this.connectionid = id;
         } catch (IOException e)
         {

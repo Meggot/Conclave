@@ -10,6 +10,7 @@ import conclave.interfaces.RoomManagerInterface;
 import conclave.model.ConclaveRoom;
 import conclave.model.ConferenceRoom;
 import conclave.model.ConnectionsLog;
+import conclave.model.ServerFrontpage;
 import conclave.model.TextRoom;
 import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
@@ -17,6 +18,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -33,13 +35,17 @@ public class RoomManager implements RoomManagerInterface {
 
     private ConnectionsLog roomConnections;
     private SecurityManager sm;
-    private HashMap<String, ConclaveRoom> hostedRooms = new HashMap<>();
+    private HashMap<String, ConclaveRoom> hostedRooms;
+    private final ArrayList<String> supportedRoomtypes = new ArrayList<>();
 
     private static RoomManager instance;
 
     private RoomManager() {
         roomConnections = new ConnectionsLog();
         sm = SecurityManager.getInstance();
+        supportedRoomtypes.add("ConferenceRoom");
+        supportedRoomtypes.add("TextRoom");
+        hostedRooms = new HashMap<>();
     }
 
     public static RoomManager getInstance() {
@@ -177,9 +183,14 @@ public class RoomManager implements RoomManagerInterface {
     }
 
     @Override
-    public void kickUser(String username, String roomname) throws RemoteException {
-        ConclaveRoom room = hostedRooms.get(roomname);
-        room.removeUser(username);
+    public void kickUser(String username, boolean banned) throws RemoteException {
+        for (ConclaveRoom croom : hostedRooms.values())
+        {
+            if (croom.hasUser(username))
+            {
+                croom.removeUser(username);
+            }
+        }
     }
 
     @Override
@@ -258,4 +269,33 @@ public class RoomManager implements RoomManagerInterface {
         }
         return returnedRoom;
     }
+
+    @Override
+    public void openRoom(String roomname) throws RemoteException {
+        ConclaveRoom room = hostedRooms.get(roomname);
+        room.openRoom();
+    }
+
+    @Override
+    public void closeRoom(String roomname) throws RemoteException {
+        ConclaveRoom room = hostedRooms.get(roomname);
+        room.closeRoom();
+    }
+    
+    
+    
+    @Override
+    public List<String> getAllRoomnames() throws RemoteException {
+        for (String hostedName : hostedRooms.keySet())
+        {
+            System.out.println("Roomname: " + hostedName);
+        }
+        return new ArrayList(hostedRooms.keySet());
+    }
+    
+    @Override
+    public List<String> getAllSupportedRoomTypes() throws RemoteException {
+        return supportedRoomtypes;
+    }
+    
 }

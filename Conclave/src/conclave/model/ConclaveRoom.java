@@ -19,6 +19,7 @@ public interface ConclaveRoom extends Remote{
     public void stopRoom() throws RemoteException;
     public void addUser(String userId, UserInterface user) throws RemoteException;
     public void removeUser(String userId) throws RemoteException;
+    public boolean hasUser(String username) throws RemoteException;
     public void postMessage(Message message) throws RemoteException;
     public void setLimit(int limit) throws RemoteException;
     public void updateAllClientsChatlog(Message msg) throws RemoteException;
@@ -31,4 +32,6 @@ public interface ConclaveRoom extends Remote{
     public void updateAllClientsConnections() throws RemoteException;
     public ConnectionsLog getAllConnections() throws RemoteException;
     public void whisper(Message msg) throws RemoteException;
+    public void closeRoom() throws RemoteException;
+    public void openRoom() throws RemoteException;
 }

@@ -22,8 +22,8 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     public HashMap<String, UserInterface> roomConnections;
     public ConnectionsLog connectionsLog;
 
-    private boolean visiblity;
-    private boolean online;
+    public boolean visiblity;
+    public boolean online;
     public int roomType;
     
     public TextRoom(String iroomName) throws RemoteException{
@@ -130,7 +130,7 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     }
     @Override
     public String getInfo() throws RemoteException {
-        return "[TextRoom] " + roomConnections.size() + "/" + roomLimit;
+        return "[TextRoom] " + roomConnections.size() + "/" + roomLimit + " {" + visiblity + "}";
     }
     @Override   
     public ConnectionsLog getAllConnections() throws RemoteException
@@ -164,5 +164,27 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     public int getType() throws RemoteException
     {
         return roomType;
+    }
+
+    @Override
+    public boolean hasUser(String username) throws RemoteException {
+        boolean has = false;
+        if (roomConnections.containsKey(username))
+        {
+            has = true;
+        }
+        return has;
+    }
+
+    @Override
+    public void closeRoom() throws RemoteException {
+        visiblity = true;
+        online = true;
+    }
+
+    @Override
+    public void openRoom() throws RemoteException {
+        visiblity = true;
+        online = true;
     }
 }

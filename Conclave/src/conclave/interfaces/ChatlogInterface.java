@@ -7,8 +7,6 @@ package conclave.interfaces;
 
 import conclave.model.Message;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Observer;
 
 /**
  *

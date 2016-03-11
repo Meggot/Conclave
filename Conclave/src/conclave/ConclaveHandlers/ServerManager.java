@@ -23,8 +23,6 @@ public class ServerManager extends Thread{
     private int port;
     private boolean open;
     
-    private ArrayList<ConnectionHandler> connections = new ArrayList<>();
-    
     public ServerManager(InetAddress ip, int port)
     {
         this.ip = ip;
@@ -36,7 +34,7 @@ public class ServerManager extends Thread{
         open = true;
         try {
             ServerSocket servSock = new ServerSocket(port, 50, ip);
-            //servSock.setReuseAddress(true);
+            servSock.setReuseAddress(true);
             int activeThreads = 0;
             Socket newConnectionSocket;
             Runnable newHandler;
@@ -51,9 +49,12 @@ public class ServerManager extends Thread{
             }
             } catch (BindException e) {
                 System.out.println("A conclave server is already running on that IP and port.");
+                e.printStackTrace();
             }catch (IOException e) {
                 e.printStackTrace();
-            }
+            } finally {
+            stopServer();
+        }
     }
     public void stopServer() {
         open = false;

@@ -5,6 +5,7 @@
  */
 package conclaveclient;
 
+import conclaveclient.Handlers.PacketUtil;
 import conclave.interfaces.UserInterface;
 import conclave.model.ConnectionsLog;
 import static conclaveclient.rmi.RMISecurityPolicyLoader.LoadDefaultPolicy;

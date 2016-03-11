@@ -245,7 +245,7 @@
     </Component>
     <Component class="javax.swing.JTextField" name="ipForm">
       <Properties>
-        <Property name="text" type="java.lang.String" value="192.168.0.20"/>
+        <Property name="text" type="java.lang.String" value="192.168.0.7"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ipFormActionPerformed"/>
@@ -253,7 +253,7 @@
     </Component>
     <Component class="javax.swing.JTextField" name="portForm">
       <Properties>
-        <Property name="text" type="java.lang.String" value="9435"/>
+        <Property name="text" type="java.lang.String" value="20003"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="portFormActionPerformed"/>

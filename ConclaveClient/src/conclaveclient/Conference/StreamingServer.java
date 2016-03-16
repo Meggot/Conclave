@@ -24,10 +24,10 @@ public class StreamingServer {
     
     public StreamingServer() {
         socketAddress = new InetSocketAddress("localhost", 20000);
-        Webcam.setAutoOpenMode(true);
         webcam = Webcam.getDefault();
         dimension = WebcamResolution.VGA.getSize();
         webcam.setViewSize(dimension);
+        Webcam.setAutoOpenMode(true);
     }
 
     public void streamWebcam() {
@@ -56,6 +56,7 @@ public class StreamingServer {
         if (serverAgent!=null)
         {
             serverAgent.stop();
+            webcam.close();
         }
     }
 

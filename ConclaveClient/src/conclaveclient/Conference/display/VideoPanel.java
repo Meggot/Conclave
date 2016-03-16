@@ -82,6 +82,7 @@ public class VideoPanel extends JPanel {
             public void run() {
                 image = update;
                 repaint();
+                revalidate();
             }
         });
     }
@@ -89,6 +90,7 @@ public class VideoPanel extends JPanel {
     public void close() {
         worker.shutdown();
     }
+    
 
     public boolean isActive() {
         return !worker.isShutdown();

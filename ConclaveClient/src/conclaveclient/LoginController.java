@@ -60,24 +60,25 @@ public class LoginController {
     }
     
     public String login(String username, String password) throws RemoteException {
-        String returnString = "ERROR LOGGING IN";
+        String returnString = "Error initiating login";
         if (connected)
         {
         try {
         packetUtil.sendPacketRequest("SETUP-CONNECTION " + username + " " + password);
-        returnString = packetUtil.readStream();
-        String[] commandWords = returnString.split("//s+");
+        String responseString = packetUtil.readStream();
+        String[] commandWords = responseString.split("//s+");
         Registry reg = LocateRegistry.getRegistry(9807);
-        String[] regNames = reg.list();
-        for (String sstr : regNames)
-        {
-            System.out.println("Registry Entry: " + sstr);
-        }
         UserInterface ui = (UserInterface) reg.lookup(username);
         if (commandWords[0].contains("100") && (ui != null))
-        {
+        { 
             SwingGUI newSwingGui = new SwingGUI(ui);
-            packetUtil.close();
+            returnString = "100 Login Successful";
+        } else if (commandWords[0].contains("401"))
+        {
+            returnString = "401 Login Unsuccessful";
+        } else if (commandWords[0].contains("403"))
+        {
+            returnString = "403 You have been banned from this server";
         }
         } catch (UnknownHostException e) {
             returnString = "That conclave server is currently down";

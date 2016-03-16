@@ -5,6 +5,8 @@
  */
 package conclaveclient.Conference;
 
+import conclaveclient.Conference.display.BroadcastPanel;
+import conclaveclient.Conference.display.VideoPanel;
 import conclaveclient.Conference.interfaces.StreamFrameListener;
 import conclaveclient.SwingGUI;
 import java.awt.Dimension;
@@ -15,13 +17,12 @@ public class ListeningClient {
 	/**
 	 * @author kerr
 	 * */
-	private static SwingGUI displayWindow;
+	private static VideoPanel displayWindow;
         private static StreamClientAgent clientAgent = null;
         
-	public static void run(SwingGUI windowFrame, InetSocketAddress addr, Dimension d) {
+	public static void run(VideoPanel windowFrame, InetSocketAddress addr, Dimension d) {
 		//setup the videoWindow
                 displayWindow = windowFrame;
-		displayWindow.setVisible(true);
 		//setup the connection
 		//logger.info("setup dimension :{}",dimension);
 		clientAgent = new StreamClientAgent(new StreamFrameListenerIMPL(),d);
@@ -30,7 +31,20 @@ public class ListeningClient {
 	
         public static void close()
         {
+            if (clientAgent!=null)
+            {
             clientAgent.stop();
+            clientAgent = null;
+            }
+        }
+        
+        public static boolean isActive() 
+        {
+            if (clientAgent != null)
+            {
+                return true;
+            }
+            return false;
         }
 	
 	protected static class StreamFrameListenerIMPL implements StreamFrameListener{
@@ -38,7 +52,6 @@ public class ListeningClient {
 		@Override
 		public void onFrameReceived(BufferedImage image) {
 			//logger.info("frame received :{}",count++);
-                        System.out.println(image.getClass() + ": recieved Frame.");
 			displayWindow.updateImage(image);			
 		}
 		

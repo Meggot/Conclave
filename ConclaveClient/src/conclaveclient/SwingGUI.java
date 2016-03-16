@@ -17,24 +17,26 @@ import conclave.model.ConnectionEntry;
 import conclave.model.Message;
 import conclaveclient.Conference.ListeningClient;
 import conclaveclient.Conference.StreamingServer;
+import conclaveclient.Conference.display.BroadcastPanel;
 import conclaveclient.Conference.display.VideoPanel;
 import java.awt.Dimension;
-import java.awt.image.BufferedImage;
-import java.net.InetSocketAddress;
+import java.awt.event.ActionEvent;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JSeparator;
+import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 
 /**
@@ -48,8 +50,7 @@ public class SwingGUI extends javax.swing.JFrame {
     private int lastMessageLine;
     private ArrayList<String> chatlogViewCategories = new ArrayList<String>();
     private boolean adminController;
-
-    protected VideoPanel videoPannel;
+    private BroadcastPanel broadcastPanel;
 
     public SwingGUI(UserInterface ui) {
         try {
@@ -74,6 +75,17 @@ public class SwingGUI extends javax.swing.JFrame {
             initilizeTabs();
             startUpdates();
             pack();
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        System.out.println("DISCONNECTING");
+                        client.leaveServer();
+                    } catch (RemoteException ex) {
+                        Logger.getLogger(SwingGUI.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -142,10 +154,9 @@ public class SwingGUI extends javax.swing.JFrame {
         postAnnouncementButton = new javax.swing.JButton();
         frontpage = new javax.swing.JPanel();
         announcments = new java.awt.List();
-        streamingPanel = new javax.swing.JPanel();
-        stream = new javax.swing.JButton();
         streamerControlPanel = new javax.swing.JPanel();
         jButton2 = new javax.swing.JButton();
+        streamButton = new javax.swing.JButton();
         connectionsScrollPanel = new javax.swing.JScrollPane();
         connectionsPanel = new javax.swing.JPanel();
         textLog = new java.awt.TextArea();
@@ -510,30 +521,6 @@ public class SwingGUI extends javax.swing.JFrame {
             .addComponent(announcments, javax.swing.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE)
         );
 
-        stream.setText("Stream");
-        stream.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                streamActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout streamingPanelLayout = new javax.swing.GroupLayout(streamingPanel);
-        streamingPanel.setLayout(streamingPanelLayout);
-        streamingPanelLayout.setHorizontalGroup(
-            streamingPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(streamingPanelLayout.createSequentialGroup()
-                .addGap(138, 138, 138)
-                .addComponent(stream, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(134, Short.MAX_VALUE))
-        );
-        streamingPanelLayout.setVerticalGroup(
-            streamingPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(streamingPanelLayout.createSequentialGroup()
-                .addGap(64, 64, 64)
-                .addComponent(stream, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(212, Short.MAX_VALUE))
-        );
-
         jButton2.setText("Stop Streaming");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -557,6 +544,13 @@ public class SwingGUI extends javax.swing.JFrame {
                 .addComponent(jButton2)
                 .addGap(20, 20, 20))
         );
+
+        streamButton.setText("Stream");
+        streamButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                streamButtonActionPerformed(evt);
+            }
+        });
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -586,6 +580,11 @@ public class SwingGUI extends javax.swing.JFrame {
         sendMessageButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 sendMessageButtonActionPerformed(evt);
+            }
+        });
+        sendMessageButton.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                sendMessageButtonKeyPressed(evt);
             }
         });
 
@@ -847,6 +846,12 @@ public class SwingGUI extends javax.swing.JFrame {
 
     private void disconnectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_disconnectButtonActionPerformed
         try {
+            if (inRoom) {
+                if (client.getRoomType() == 2 && broadcastPanel != null) {
+                    broadcastPanel.stop();
+                }
+                client.leaveRoom();
+            }
             client.disconnect();
             inRoom = false;
         } catch (RemoteException e) {
@@ -858,14 +863,12 @@ public class SwingGUI extends javax.swing.JFrame {
     private void leaveRoomButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_leaveRoomButtonActionPerformed
         try {
             if (inRoom) {
-                if (client.getRoomType() == 2) {
-                    closeWebcam();
-                    interactablePanel.removeAll();
-                    interactablePanel.add(frontpage);
+                if (client.getRoomType() == 2 && broadcastPanel != null) {
+                    broadcastPanel.stop();
                 }
                 client.leaveRoom();
                 inRoom = false;
-                updateFrontpage();
+                buildFrontpage();
             }
         } catch (RemoteException e) {
 
@@ -968,7 +971,7 @@ public class SwingGUI extends javax.swing.JFrame {
     private void banKickButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_banKickButtonActionPerformed
         if (adminController) {
             try {
-                Message kickStatus = new Message(client.getUsername(), client.getUsername(), "Cannot kick/ban that user", 1);
+                Message kickStatus = new Message("System", client.getUsername(), "Cannot kick/ban that user", 2);
                 String connectionSelectUsername = (String) playerSelection.getSelectedItem();
                 AdminInterface controller = (AdminInterface) client;
                 boolean banned = banCheckbox.isSelected();
@@ -994,7 +997,7 @@ public class SwingGUI extends javax.swing.JFrame {
                 String roomselect = (String) roomSelection.getSelectedItem();
                 AdminInterface controller = (AdminInterface) client;
                 controller.openRoom(roomselect);
-                Message openRoomMsg = new Message(client.getUsername(), client.getUsername(), roomselect + " is now opened", 1);
+                Message openRoomMsg = new Message("System", client.getUsername(), roomselect + " is now opened", 2);
                 updateChatlog(openRoomMsg);
                 initilizeAdminContents();
             } catch (RemoteException e) {
@@ -1013,7 +1016,7 @@ public class SwingGUI extends javax.swing.JFrame {
                 String roomselect = (String) roomSelection.getSelectedItem();
                 AdminInterface controller = (AdminInterface) client;
                 controller.closeRoom(roomselect);
-                Message closeRoomMsg = new Message(client.getUsername(), client.getUsername(), roomselect + " is now closed", 1);
+                Message closeRoomMsg = new Message("System", client.getUsername(), roomselect + " is now closed", 2);
                 updateChatlog(closeRoomMsg);
                 initilizeAdminContents();
             } catch (RemoteException e) {
@@ -1025,7 +1028,7 @@ public class SwingGUI extends javax.swing.JFrame {
     private void createRoomButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createRoomButtonActionPerformed
         if (adminController) {
             try {
-                Message createRoomStatus = new Message(client.getUsername(), client.getUsername(), "Room creation has failed", 1);
+                Message createRoomStatus = new Message("System", client.getUsername(), "Room creation has failed", 2);
                 AdminInterface controller = (AdminInterface) client;
                 String newRoomName = roomName.getText();
                 String newRoomTypeName = (String) roomTypeDropdown.getSelectedItem();
@@ -1087,30 +1090,29 @@ public class SwingGUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_postAnnouncementButtonActionPerformed
 
-    StreamingServer streamServ;
-    
-    private void streamActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_streamActionPerformed
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+
+    }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void sendMessageButtonKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_sendMessageButtonKeyPressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_sendMessageButtonKeyPressed
+
+    private void streamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_streamButtonActionPerformed
+        broadcastPanel.startStreaming();
         try {
-            interactablePanel.removeAll();
-            streamServ = new StreamingServer();
-            client.broadcastToConference(streamServ.getSocketIp(), streamServ.getDimension());
-            streamServ.streamWebcam();
-            interactablePanel.add(streamerControlPanel);
-            startListeningToStream();
+            client.broadcastToConference(broadcastPanel.getIP(), broadcastPanel.getDimension());
         } catch (RemoteException ex) {
             Logger.getLogger(SwingGUI.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_streamActionPerformed
-
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        streamServ.stopStreaming();
-        ListeningClient.close();
-    }//GEN-LAST:event_jButton2ActionPerformed
+        pack();
+    }//GEN-LAST:event_streamButtonActionPerformed
 
     private void resetChatlogView() {
         textLog.setText("");
         lastMessageLine = 0;
     }
+// Jess has a peach
 
     private void buildFrontpage() {
         interactablePanel.removeAll();
@@ -1166,7 +1168,7 @@ public class SwingGUI extends javax.swing.JFrame {
                             pmField.setText("");
                             newFrame.setVisible(false);
                         } catch (RemoteException e) {
-                            Message newMessage = new Message(senderUsername, senderUsername, "That user could not be reached", 2);
+                            Message newMessage = new Message("System", senderUsername, "That user could not be reached", 2);
                             try {
                                 client.updateChatLog(newMessage);
                             } catch (RemoteException ex) {
@@ -1191,7 +1193,7 @@ public class SwingGUI extends javax.swing.JFrame {
                 joinRoom(entryName);
             } else {
                 String incorrectMsg = "Incorrect password";
-                Message msg = new Message(client.getUsername(), client.getUsername(), incorrectMsg, 2);
+                Message msg = new Message("System", client.getUsername(), incorrectMsg, 2);
                 client.updateChatLog(msg);
             }
         } catch (RemoteException e) {
@@ -1201,19 +1203,15 @@ public class SwingGUI extends javax.swing.JFrame {
 
     private void joinRoom(String entryName) {
         try {
-            client.joinRoom(entryName);
+            boolean joined = client.joinRoom(entryName);
+            if (!joined) {
+            interactablePanel.removeAll();
             inRoom = true;
             if (client.getRoomType() == 2) {
-                interactablePanel.removeAll();
-                if (client.isConferenceStreaming())
-                {
-                    startListeningToStream();
-                } else {
-                    System.out.println("We got here pal #23");
-                    interactablePanel.add(streamingPanel);
-                    streamingPanel.setVisible(true);
-                }
-                
+                buildBroadcastPanel();
+            }
+            } else {
+                updateChatlog(new Message("System", client.getUsername(), "You cannot connect to that room", 2));
             }
         } catch (RemoteException e) {
 
@@ -1246,7 +1244,9 @@ public class SwingGUI extends javax.swing.JFrame {
     }
 
     private void startUpdates() {
-        Thread updates = new Thread(new Runnable() {
+        Thread updates;
+        updates = new Thread(new Runnable() {
+            @Override
             public void run() {
                 try {
                     while (client.isConnected()) {
@@ -1267,21 +1267,9 @@ public class SwingGUI extends javax.swing.JFrame {
                             }
                             lastMessageLine = lstMsgClient;
                         }
-                        /**
-                        if (client.getRoomType() == 2)
-                        {
-                            if (client.isConferenceStreaming())
-                            {
-                                startListeningToStream();
-                            }
-                        }
-                        * */
                         Thread.sleep(500);
                     }
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                } catch (RemoteException | InterruptedException e) {
                 }
             }
         });
@@ -1376,9 +1364,8 @@ public class SwingGUI extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> roomTypeDropdown;
     private javax.swing.JButton sendMessage;
     private javax.swing.JButton sendMessageButton;
-    private javax.swing.JButton stream;
+    private javax.swing.JButton streamButton;
     private javax.swing.JPanel streamerControlPanel;
-    private javax.swing.JPanel streamingPanel;
     private javax.swing.JCheckBox systemFilterCheckbox;
     private javax.swing.JTabbedPane tabbedPanel;
     private javax.swing.JTextArea textInputArea;
@@ -1416,46 +1403,11 @@ public class SwingGUI extends javax.swing.JFrame {
 
         pack();
     }
-    
-    public void startListeningToStream() throws RemoteException
-    {
-        if (client.isConferenceStreaming())
-            {
-                Dimension streamingDimension = client.getConferenceDimension();
-                InetSocketAddress networkLocation = client.getStreamerLocation();
-                initiateVideoPanel(streamingDimension);
-                ListeningClient.run(this, networkLocation, streamingDimension);
-            }
-        
-    }
 
-    public void initiateVideoPanel(Dimension dimension) {
+    private void buildBroadcastPanel() {
+        broadcastPanel = new BroadcastPanel(client);
         interactablePanel.removeAll();
-        this.videoPannel = new VideoPanel();
-        this.videoPannel.setPreferredSize(dimension);
-        this.interactablePanel.add(videoPannel);
+        interactablePanel.add(broadcastPanel);
         pack();
-
     }
-
-    public void setVideoVisible(boolean visible) {
-        this.videoPannel.setVisible(visible);
-    }
-
-    public void updateImage(BufferedImage image) {
-        videoPannel.updateImage(image);
-    }
-
-    private void closeWebcam() {
-        if (videoPannel!=null)
-        {
-            videoPannel.close();
-        }
-        if (streamServ!=null)
-        {
-            streamServ.stopStreaming();
-        }
-        ListeningClient.close();
-    }
-
 }

@@ -257,8 +257,16 @@ public class LoginGUI extends javax.swing.JFrame {
                 String username = usernameForm.getText();
                 String password = passwordForm.getText();
                 if (username != null && password != null) {
-                    loginStatus = loginController.login(username, password);
-                    this.setVisible(false);
+                    String responseString = loginController.login(username, password);
+                    if (responseString.contains("100")) {
+                        loginStatus = "Successful login";
+                        this.setVisible(false);
+                    } else if (responseString.contains("401")) {
+                        loginStatus = "Incorrect login details";
+                    } else if (responseString.contains("423")) {
+                        loginStatus = "That user is already logged in";
+                    }
+
                 } else {
                     loginStatus = "You must enter all the fields";
                 }
@@ -268,13 +276,14 @@ public class LoginGUI extends javax.swing.JFrame {
         } catch (NumberFormatException e) {
             loginStatus = "You must enter all the fields appropriatly.";
         } catch (RemoteException ex) {
+            loginStatus = "Cannot connect to server registry.";
             Logger.getLogger(LoginGUI.class.getName()).log(Level.SEVERE, null, ex);
         }
         setLoginStatusText(loginStatus);
     }//GEN-LAST:event_loginButtonActionPerformed
 
     private void createAccountButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createAccountButtonActionPerformed
-        String creationStatus = "ERROR WHILST LOGGING IN";
+        String creationStatus = "ERROR WHILST CREATING ACCOUNT";
         try {
             if (loginController.isConnected()) {
                 String username = usernameForm.getText();
@@ -307,7 +316,7 @@ public class LoginGUI extends javax.swing.JFrame {
         final String port = portForm.getText();
         SwingWorker sw = new SwingWorker() {
             String connectionStatus = "Bad IP/Port format";
-            
+
             @Override
             protected Object doInBackground() throws Exception {
                 if (IP.length() > 6 && port.length() > 1) {
@@ -323,63 +332,64 @@ public class LoginGUI extends javax.swing.JFrame {
                 }
                 return null;
             }
-            
+
             @Override
             protected void done() {
                 setConnectionStatusText(connectionStatus);
             }
         };
-         sw.execute();     
+        sw.execute();
     }//GEN-LAST:event_connectButtonActionPerformed
 
     private void usernameFormActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_usernameFormActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_usernameFormActionPerformed
 
-            private void setLoginStatusText(String text) {
-                loginOutput.setText("");
-                loginOutput.setText(text);
-            }
+    private void setLoginStatusText(String text) {
+        loginOutput.setText("");
+        loginOutput.setText(text);
+    }
 
-            private void setConnectionStatusText(String text) {
-                statusOutput.setText("");
-                statusOutput.setText(text);
-            }
+    private void setConnectionStatusText(String text) {
+        statusOutput.setText("");
+        statusOutput.setText(text);
+    }
 
-            /**
-             * @param args the command line arguments
-             */
-            public static void main(String args[]) {
-                /* Set the Nimbus look and feel */
-                //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-                /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-                 */
-                try {
-                    for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                        if ("Nimbus".equals(info.getName())) {
-                            javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                            break;
-                        }
-                    }
-                } catch (ClassNotFoundException ex) {
-                    java.util.logging.Logger.getLogger(LoginGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-                } catch (InstantiationException ex) {
-                    java.util.logging.Logger.getLogger(LoginGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-                } catch (IllegalAccessException ex) {
-                    java.util.logging.Logger.getLogger(LoginGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-                } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-                    java.util.logging.Logger.getLogger(LoginGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
                 }
-                //</editor-fold>
-
-                /* Create and display the form */
-                java.awt.EventQueue.invokeLater(new Runnable() {
-                    public void run() {
-                        new LoginGUI().setVisible(true);
-                    }
-                });
             }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(LoginGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(LoginGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(LoginGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(LoginGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new LoginGUI().setVisible(true);
+            }
+        });
+
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton connectButton;

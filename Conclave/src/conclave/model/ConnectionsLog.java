@@ -6,7 +6,6 @@
 package conclave.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -54,7 +53,6 @@ public class ConnectionsLog implements Serializable{
     
     public void addConnection(String name, String desc)
     {
-        System.out.println("Trying to add: " + name + " / " + desc);
         ConnectionEntry newConnection = new ConnectionEntry(name, desc);
         connections.put(name, newConnection);
     }

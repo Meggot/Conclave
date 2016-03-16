@@ -21,5 +21,5 @@ public interface IConferenceRoom extends ConclaveRoom {
     public void startBroadcasting(String username, InetSocketAddress networkloc, Dimension d) throws RemoteException;
     public void stopBroadcasting(String streamerName) throws RemoteException;
     public InetSocketAddress getStreamerIp() throws RemoteException;
-    
+    public String getStreamerName() throws RemoteException;
 }

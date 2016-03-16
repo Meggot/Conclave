@@ -77,14 +77,21 @@ public interface UserInterface extends Remote {
 
     public void updateFrontpage(String username, String announcment) throws RemoteException;
 
+    public void updateStreamer() throws RemoteException;
+    
     public boolean hasFrontpageUpdated() throws RemoteException;
 
     public Dimension getConferenceDimension() throws RemoteException;
 
+    public String getStreamerName() throws RemoteException;
+    
+    public void stopBroadcasting() throws RemoteException;
     
     public boolean isConferenceStreaming() throws RemoteException;
     
     public InetSocketAddress getStreamerLocation() throws RemoteException;
     
     public void broadcastToConference(InetSocketAddress loc, Dimension d) throws RemoteException;
+    
+    public boolean hasStreamerUpdated() throws RemoteException;
 }

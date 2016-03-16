@@ -47,7 +47,7 @@ public class Encryptor{
         try {
         byte[] encoded = toBeEncrypted.getBytes("UTF8");
         byte[] enc = ecipher.doFinal(encoded);
-        return new sun.misc.BASE64Encoder().encode(enc); // this will convert to a string.
+        return new sun.misc.BASE64Encoder().encode(enc);
         } catch (IOException e) {
           System.out.println(e);}
           catch (IllegalBlockSizeException e) {

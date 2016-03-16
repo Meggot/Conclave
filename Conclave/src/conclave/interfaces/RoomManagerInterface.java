@@ -35,4 +35,5 @@ public interface RoomManagerInterface extends Remote {
     public void kickUser(String username, boolean banned) throws RemoteException;
     public List<String> getAllSupportedRoomTypes() throws RemoteException;
     public boolean isARoom(String roomname) throws RemoteException;
+    public void censorUser(String username) throws RemoteException;
 }

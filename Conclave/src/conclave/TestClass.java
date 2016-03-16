@@ -5,12 +5,9 @@
  */
 package conclave;
 
-import conclave.db.Account;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 
 /**
  *
@@ -21,9 +18,7 @@ public class TestClass {
     public static void main(String args[]) throws RemoteException, UnknownHostException
     {
         //try {
-        ServerController testClave = ServerController.getInstance();
-        testClave.setPort(20003);
-        testClave.setIp(InetAddress.getLocalHost());
+        ServerController testClave = new ServerController(InetAddress.getLocalHost(), 20003, "Conclave Server");
         testClave.addAdmin("MeggotZolu");
         testClave.startServer();
         //} catch (UnknownHostException e)

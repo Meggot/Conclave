@@ -5,6 +5,7 @@
  */
 package conclave.ConclaveHandlers;
 
+import conclave.ServerController;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetAddress;
@@ -12,6 +13,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.RMISecurityManager;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -19,16 +22,23 @@ import java.util.ArrayList;
  */
 public class ServerManager extends Thread{
     
-    private InetAddress ip;
-    private int port;
+    private final InetAddress ip;
+    private final int port;
     private boolean open;
-    
+    private static final Logger log= Logger.getLogger( ServerManager.class.getName() );
+     
     public ServerManager(InetAddress ip, int port)
     {
         this.ip = ip;
         this.port = port;
         open = false;
     }
+    
+    public boolean isOpen()
+    {
+        return open;
+    }
+    
     public void start()
     {
         open = true;
@@ -40,9 +50,7 @@ public class ServerManager extends Thread{
             Runnable newHandler;
             while (open)
             {
-                System.out.println("Server is online on port: " + servSock.getLocalPort() + ". IP: " + servSock.getInetAddress());
                 newConnectionSocket = servSock.accept();
-                System.out.println("New Connection! Connection IP: " + newConnectionSocket.getInetAddress());
                 newHandler = new ConnectionHandler(newConnectionSocket, activeThreads);
                 Thread connectionThread = new Thread(newHandler);
                 connectionThread.start();
@@ -58,5 +66,6 @@ public class ServerManager extends Thread{
     }
     public void stopServer() {
         open = false;
+        log.log(Level.INFO, "The server has been stopped");
     }
 }

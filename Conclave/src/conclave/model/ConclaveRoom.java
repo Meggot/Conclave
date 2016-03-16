@@ -25,7 +25,6 @@ public interface ConclaveRoom extends Remote{
     public void updateAllClientsChatlog(Message msg) throws RemoteException;
     public String getRoomName() throws RemoteException;
     public int getRoomLimit() throws RemoteException;
-    public boolean isVisiblity() throws RemoteException;
     public boolean isOnline() throws RemoteException;
     public String getInfo() throws RemoteException;
     public int getType() throws RemoteException;
@@ -34,4 +33,6 @@ public interface ConclaveRoom extends Remote{
     public void whisper(Message msg) throws RemoteException;
     public void closeRoom() throws RemoteException;
     public void openRoom() throws RemoteException;
+    public void addCensoredUser(String username) throws RemoteException;
+    public void uncensorUser(String username) throws RemoteException;
 }

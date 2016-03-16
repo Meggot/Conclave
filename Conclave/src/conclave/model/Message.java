@@ -41,6 +41,11 @@ public class Message implements Serializable {
         return returnString;
     }
     
+    public String getSenderName()
+    {
+        return sender;
+    }
+    
     public String getRecipientId()
     {
         return recipientId;

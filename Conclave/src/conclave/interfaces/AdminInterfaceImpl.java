@@ -20,13 +20,14 @@ import java.util.logging.Logger;
  */
 public class AdminInterfaceImpl extends UserInterfaceImpl implements AdminInterface{
     
-    private RoomManager roomManager;
-    private ServerController serverController;
+    private final RoomManager roomManager;
+    private final ServerController serverController;
+    private Logger log = Logger.getLogger(AdminInterfaceImpl.class.getName());
     
-    public AdminInterfaceImpl(Account account) throws RemoteException {
+    public AdminInterfaceImpl(Account account, ServerController instance) throws RemoteException {
         super(account);
         roomManager = RoomManager.getInstance();
-        serverController = ServerController.getInstance();
+        serverController = instance;
     }
 
     @Override
@@ -34,8 +35,9 @@ public class AdminInterfaceImpl extends UserInterfaceImpl implements AdminInterf
         try {
             roomManager.mountOpenRoom(roomname, roomType);
             roomManager.loadRoom(roomname);
+            log.log(Level.FINE, "Admin: {0} has mounted a new open room: {1}", new Object[] {this.getUsername(), roomname});
         } catch (RemoteException ex) {
-            Logger.getLogger(AdminInterfaceImpl.class.getName()).log(Level.SEVERE, null, ex);
+           log.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -44,22 +46,25 @@ public class AdminInterfaceImpl extends UserInterfaceImpl implements AdminInterf
         try {
             roomManager.createRoom(roomname, roompassword, roomType);
             roomManager.loadRoom(roomname);
+            log.log(Level.FINE, "Admin: {0} has persisted a new room: {1}", new Object[] {this.getUsername(), roomname});
         } catch (RemoteException ex) {
-            Logger.getLogger(AdminInterfaceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            log.log(Level.SEVERE, null, ex);
         }
     }
     
     @Override
     public void sendAdminMessage(Message msg, String username) throws RemoteException {
         serverController.alertUser(msg, username);
+        log.log(Level.FINE, "Admin: {0} has sent a admin message [{1}]: to {2}.", new Object[] {this.getUsername(), msg, username});
     }
 
     @Override
     public void removeRoom(String roomname) throws RemoteException{
         try {
             roomManager.deleteRoom(roomname);
+            log.log(Level.FINE, "Admin: {0} has removed room: {1}",new Object[] {this.getUsername(), roomname});
         } catch (RemoteException ex) {
-            Logger.getLogger(AdminInterfaceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            log.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -67,8 +72,10 @@ public class AdminInterfaceImpl extends UserInterfaceImpl implements AdminInterf
     public void kickUser(String username, boolean banned) throws RemoteException{
         try {
             roomManager.kickUser(username, banned);
+            serverController.banUser(username);
+            log.log(Level.FINE, "Admin: {0} has kicked the user: {1}. Banned? ({3})",new Object[] {this.getUsername(), username, banned});
         } catch (RemoteException ex) {
-            Logger.getLogger(AdminInterfaceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            log.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -76,9 +83,10 @@ public class AdminInterfaceImpl extends UserInterfaceImpl implements AdminInterf
     public void closeRoom(String roomname) throws RemoteException{
         try {
             roomManager.closeRoom(roomname);
+            log.log(Level.FINE, "Admin: {0}, has close the room: {1}", new Object[] {this.getUsername(), roomname});
         } catch (RemoteException e)
         {
-            
+            log.log(Level.SEVERE, null, e);
         }
     }
 
@@ -86,16 +94,19 @@ public class AdminInterfaceImpl extends UserInterfaceImpl implements AdminInterf
     public void openRoom(String roomname) throws RemoteException{
         try {
             roomManager.openRoom(roomname);
+            log.log(Level.FINE, "Admin: {0}, has opened the room: {1}", new Object[] {this.getUsername(), roomname});
         } catch (RemoteException ex) {
-            Logger.getLogger(AdminInterfaceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            log.log(Level.SEVERE, null, ex);
         }
     }
 
     @Override
     public void censorUser(String username) throws RemoteException{
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        roomManager.censorUser(username);
+        log.log(Level.FINE, "Admin: {0}, has censored the user: {1}", new Object[] {this.getUsername(), username});
     }
     
+    @Override
     public int getType() throws RemoteException
     {
         return 2;

@@ -10,7 +10,6 @@ import conclave.interfaces.RoomManagerInterface;
 import conclave.model.ConclaveRoom;
 import conclave.model.ConferenceRoom;
 import conclave.model.ConnectionsLog;
-import conclave.model.ServerFrontpage;
 import conclave.model.TextRoom;
 import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
@@ -21,6 +20,8 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -37,7 +38,7 @@ public class RoomManager implements RoomManagerInterface {
     private SecurityManager sm;
     private HashMap<String, ConclaveRoom> hostedRooms;
     private final ArrayList<String> supportedRoomtypes = new ArrayList<>();
-
+    private static final Logger log = Logger.getLogger( RoomManager.class.getName() );
     private static RoomManager instance;
 
     private RoomManager() {
@@ -69,11 +70,12 @@ public class RoomManager implements RoomManagerInterface {
                     break;
             }
             if (room != null) {
+                room.startRoom();
                 hostedRooms.put(roomname, room);
                 roomConnections.addConnection(roomname, room.getInfo());
                 Registry reg = LocateRegistry.getRegistry(9807);
                 reg.bind(room.getRoomName(), room);
-                System.out.println("Room: " + roomname + " is bound to registry.");
+                log.log(Level.INFO, "An open room {0} has been added to the registry", roomname);
                 ok = true;
             }
         } catch (AlreadyBoundException e) {
@@ -107,6 +109,7 @@ public class RoomManager implements RoomManagerInterface {
                 et.commit();
                 em.close();
                 emf.close();
+                log.log(Level.INFO, "A new room {0} has been persisted to the DB", roomname);
                 success = true;
             }
         } catch (RemoteException e) {
@@ -116,18 +119,18 @@ public class RoomManager implements RoomManagerInterface {
     }
 
     @Override
-    public boolean loadRoom(String roomName) throws RemoteException {
+    public boolean loadRoom(String roomname) throws RemoteException {
         boolean success = false;
         try {
-            if (isARoom(roomName)) {
-                ConclaveRoom room = getConclaveRoom(roomName);
+            if (isARoom(roomname)) {
+                ConclaveRoom room = getConclaveRoom(roomname);
                 Registry reg = LocateRegistry.getRegistry(9807);
                 reg.bind(room.getRoomName(), room);
                 room.startRoom();
-                roomConnections.addConnection(roomName, room.getInfo());
-                hostedRooms.put(roomName, room);
+                roomConnections.addConnection(roomname, room.getInfo());
+                hostedRooms.put(roomname, room);
                 success = true;
-                System.out.println("Room: " + roomName + " is bound to registry.");
+                log.log(Level.INFO, "A persisted room: {0} has been loaded to the registry", roomname);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -192,6 +195,13 @@ public class RoomManager implements RoomManagerInterface {
             }
         }
     }
+    
+    public void censorUser(String username) throws RemoteException {
+        for (ConclaveRoom croom : hostedRooms.values())
+        {
+            croom.addCensoredUser(username);
+        }
+    }
 
     @Override
     public boolean isARoom(String roomname) throws RemoteException {
@@ -211,7 +221,7 @@ public class RoomManager implements RoomManagerInterface {
     @Override
     public boolean deleteRoom(String roomname) throws RemoteException {
         boolean successful = false;
-        //Delete from JPA
+        //JPA code
         roomConnections.removeConnection(roomname);
         hostedRooms.remove(roomname);
         return successful;
@@ -222,8 +232,10 @@ public class RoomManager implements RoomManagerInterface {
         if (isARoom(roomname) && hostedRooms.containsKey(roomname)) {
             ConclaveRoom room = getConclaveRoom(roomname);
             room.stopRoom();
+            
             roomConnections.removeConnection(roomname);
             hostedRooms.remove(roomname);
+            log.log(Level.INFO, "Room: {0} has been stopped", roomname);
         }
     }
 
@@ -274,22 +286,20 @@ public class RoomManager implements RoomManagerInterface {
     public void openRoom(String roomname) throws RemoteException {
         ConclaveRoom room = hostedRooms.get(roomname);
         room.openRoom();
+        log.log(Level.INFO, "Room: {0} has been opened", roomname);
     }
 
     @Override
     public void closeRoom(String roomname) throws RemoteException {
         ConclaveRoom room = hostedRooms.get(roomname);
         room.closeRoom();
+        log.log(Level.INFO, "Room: {0} has been closed", roomname);
     }
     
     
     
     @Override
     public List<String> getAllRoomnames() throws RemoteException {
-        for (String hostedName : hostedRooms.keySet())
-        {
-            System.out.println("Roomname: " + hostedName);
-        }
         return new ArrayList(hostedRooms.keySet());
     }
     

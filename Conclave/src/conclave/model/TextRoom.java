@@ -9,7 +9,10 @@ import conclave.interfaces.UserInterface;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -19,24 +22,29 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     
     public String roomName;
     public int roomLimit;
+    public static int currentConnections;
     public HashMap<String, UserInterface> roomConnections;
     public ConnectionsLog connectionsLog;
-
-    public boolean visiblity;
+    public ArrayList<String> censorList;
+    
     public boolean online;
     public int roomType;
     
+    private final Logger log = Logger.getLogger(TextRoom.class.getName());
+    
     public TextRoom(String iroomName) throws RemoteException{
         this.roomName = iroomName;
-        this.visiblity = false;
         this.online = false;
         roomConnections = new HashMap<>();
+        censorList = new ArrayList<>();
         connectionsLog = new ConnectionsLog();
         roomLimit = 20;
         roomType = 1;
+        currentConnections = 0;
     }
     /**
      * CONTROL METHODS
+     * @throws java.rmi.RemoteException
      */
     @Override
     public void startRoom() throws RemoteException
@@ -58,7 +66,7 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     @Override
     public void addUser(String username, UserInterface user) throws RemoteException
     {
-        if (roomConnections.size() <= roomLimit)
+        if (currentConnections <= roomLimit)
         {
             roomConnections.put(username, user);
             connectionsLog.addConnection(username, "User");
@@ -66,6 +74,8 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
             Message welcomeMessage = new Message(roomName, username, msg, 2);
             whisper(welcomeMessage);
             updateAllClientsConnections();
+            log.log(Level.INFO, "User: {0} has joined the room: {1}", new Object[] {username, roomName});
+            currentConnections++;
         }
     }
     
@@ -78,12 +88,19 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
         roomConnections.remove(username);
         connectionsLog.removeConnection(username);
         updateAllClientsConnections();
+        log.log(Level.INFO, "User: {0} has been removed from the room: {1}", new Object[] {username, roomName});
+        currentConnections--;
     }
 
     @Override
     public void postMessage(Message message)throws RemoteException
     {
-        updateAllClientsChatlog(message);
+        if (!censorList.contains(message.getSenderName()))
+        {
+            updateAllClientsChatlog(message);
+        } else {
+            whisper(new Message(roomName, message.getSenderName(), "You are currently muted", 2));
+        }
     }
     @Override
     public void setLimit(int limit)throws RemoteException
@@ -101,8 +118,7 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
                 } catch (IOException e)
                 {
                     String username = ui.getUsername();
-                    roomConnections.remove(username);
-                    connectionsLog.removeConnection(username);
+                    removeUser(username);
                     updateAllClientsConnections();
                     e.printStackTrace();
                 }   
@@ -120,17 +136,12 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     }
 
     @Override
-    public boolean isVisiblity() throws RemoteException{
-        return visiblity;
-    }
-
-    @Override
     public boolean isOnline() throws RemoteException{
         return online;
     }
     @Override
     public String getInfo() throws RemoteException {
-        return "[TextRoom] " + roomConnections.size() + "/" + roomLimit + " {" + visiblity + "}";
+        return "[TextRoom] " + currentConnections + "/" + roomLimit + " {" + online + "}";
     }
     @Override   
     public ConnectionsLog getAllConnections() throws RemoteException
@@ -152,6 +163,18 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
         }
      
     }
+    
+    @Override
+    public void addCensoredUser(String username) throws RemoteException
+    {
+        censorList.add(username);
+    }
+    
+    @Override
+    public void uncensorUser(String username) throws RemoteException
+    {
+        censorList.remove(username);
+    }
 
     @Override
     public void whisper(Message msg) throws RemoteException 
@@ -161,6 +184,12 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
         ui.updateChatLog(msg);
     }
     
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
+    @Override
     public int getType() throws RemoteException
     {
         return roomType;
@@ -178,13 +207,11 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
 
     @Override
     public void closeRoom() throws RemoteException {
-        visiblity = true;
-        online = true;
+        online = false;
     }
 
     @Override
     public void openRoom() throws RemoteException {
-        visiblity = true;
         online = true;
     }
 }

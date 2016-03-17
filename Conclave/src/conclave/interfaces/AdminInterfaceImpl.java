@@ -34,7 +34,7 @@ public class AdminInterfaceImpl extends UserInterfaceImpl implements AdminInterf
     public void addRoom(String roomname, int roomType) throws RemoteException{
         try {
             roomManager.mountOpenRoom(roomname, roomType);
-            roomManager.loadRoom(roomname);
+            serverController.updateAllClientsConnections();
             log.log(Level.FINE, "Admin: {0} has mounted a new open room: {1}", new Object[] {this.getUsername(), roomname});
         } catch (RemoteException ex) {
            log.log(Level.SEVERE, null, ex);
@@ -46,6 +46,7 @@ public class AdminInterfaceImpl extends UserInterfaceImpl implements AdminInterf
         try {
             roomManager.createRoom(roomname, roompassword, roomType);
             roomManager.loadRoom(roomname);
+            serverController.updateAllClientsConnections();
             log.log(Level.FINE, "Admin: {0} has persisted a new room: {1}", new Object[] {this.getUsername(), roomname});
         } catch (RemoteException ex) {
             log.log(Level.SEVERE, null, ex);
@@ -62,6 +63,7 @@ public class AdminInterfaceImpl extends UserInterfaceImpl implements AdminInterf
     public void removeRoom(String roomname) throws RemoteException{
         try {
             roomManager.deleteRoom(roomname);
+            serverController.updateAllClientsConnections();
             log.log(Level.FINE, "Admin: {0} has removed room: {1}",new Object[] {this.getUsername(), roomname});
         } catch (RemoteException ex) {
             log.log(Level.SEVERE, null, ex);
@@ -72,7 +74,10 @@ public class AdminInterfaceImpl extends UserInterfaceImpl implements AdminInterf
     public void kickUser(String username, boolean banned) throws RemoteException{
         try {
             roomManager.kickUser(username, banned);
-            serverController.banUser(username);
+            if (banned)
+            {
+                 serverController.banUser(username);
+            }
             log.log(Level.FINE, "Admin: {0} has kicked the user: {1}. Banned? ({3})",new Object[] {this.getUsername(), username, banned});
         } catch (RemoteException ex) {
             log.log(Level.SEVERE, null, ex);
@@ -83,6 +88,7 @@ public class AdminInterfaceImpl extends UserInterfaceImpl implements AdminInterf
     public void closeRoom(String roomname) throws RemoteException{
         try {
             roomManager.closeRoom(roomname);
+            serverController.updateAllClientsConnections();
             log.log(Level.FINE, "Admin: {0}, has close the room: {1}", new Object[] {this.getUsername(), roomname});
         } catch (RemoteException e)
         {
@@ -94,15 +100,23 @@ public class AdminInterfaceImpl extends UserInterfaceImpl implements AdminInterf
     public void openRoom(String roomname) throws RemoteException{
         try {
             roomManager.openRoom(roomname);
+            serverController.updateAllClientsConnections();
             log.log(Level.FINE, "Admin: {0}, has opened the room: {1}", new Object[] {this.getUsername(), roomname});
         } catch (RemoteException ex) {
             log.log(Level.SEVERE, null, ex);
         }
     }
+    
+    @Override
+    public void uncensorUser(String username) throws RemoteException {
+        roomManager.uncensorUser(username);
+        serverController.alertUser(new Message(getUsername(), username, "You have been unmuted", 3), username);
+    }
 
     @Override
     public void censorUser(String username) throws RemoteException{
         roomManager.censorUser(username);
+        serverController.alertUser(new Message(getUsername(), username, "You have been muted", 3), username);
         log.log(Level.FINE, "Admin: {0}, has censored the user: {1}", new Object[] {this.getUsername(), username});
     }
     
@@ -130,5 +144,11 @@ public class AdminInterfaceImpl extends UserInterfaceImpl implements AdminInterf
     @Override
     public void postAnnouncment(String msg) throws RemoteException {
         serverController.updateFrontpage(getUsername(), msg);
+    }
+
+    @Override
+    public boolean isMuted(String username) throws RemoteException {
+        boolean mutedStatus = roomManager.isMuted(username);
+        return mutedStatus;
     }
 }

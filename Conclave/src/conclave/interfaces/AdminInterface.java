@@ -22,6 +22,8 @@ public interface AdminInterface extends UserInterface{
     public void closeRoom(String roomname) throws RemoteException;
     public void openRoom(String roomname) throws RemoteException;
     public void censorUser(String username) throws RemoteException;
+    public void uncensorUser(String username) throws RemoteException;
+    public boolean isMuted(String username) throws RemoteException;
     public List<String> getSupportedRoomTypes() throws RemoteException;
     public List<String> getAllConnectedUsernames() throws RemoteException;
     public void sendAdminMessage(Message message, String username) throws RemoteException;

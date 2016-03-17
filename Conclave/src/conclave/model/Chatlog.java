@@ -7,8 +7,8 @@ package conclave.model;
 
 import conclave.interfaces.ChatlogInterface;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  *
@@ -16,11 +16,11 @@ import java.util.LinkedList;
  */
 public class Chatlog implements ChatlogInterface, Serializable {
     
-    public ArrayList<Message> textLog;
+    public CopyOnWriteArrayList<Message> textLog;
     
     public Chatlog()
     {
-        textLog = new ArrayList<>();
+        textLog = new CopyOnWriteArrayList<>();
     }
     
     /**

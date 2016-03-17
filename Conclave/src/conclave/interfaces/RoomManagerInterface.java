@@ -21,7 +21,7 @@ public interface RoomManagerInterface extends Remote {
     public boolean createRoom(String roomname, String password, int roomType) throws RemoteException;
     public boolean mountOpenRoom(String roomname, int roomType) throws RemoteException;
     public boolean deleteRoom(String roomname) throws RemoteException;
-    
+    public void uncensorUser(String username) throws RemoteException;
     public boolean hasPassword(String roomname) throws RemoteException;
     public boolean valdiateRoom(String username, String password) throws RemoteException;
     public ConnectionsLog returnRooms() throws RemoteException;
@@ -36,4 +36,5 @@ public interface RoomManagerInterface extends Remote {
     public List<String> getAllSupportedRoomTypes() throws RemoteException;
     public boolean isARoom(String roomname) throws RemoteException;
     public void censorUser(String username) throws RemoteException;
+    public boolean isMuted(String username) throws RemoteException;
 }

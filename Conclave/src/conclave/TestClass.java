@@ -17,24 +17,8 @@ public class TestClass {
     
     public static void main(String args[]) throws RemoteException, UnknownHostException
     {
-        //try {
-        ServerController testClave = new ServerController(InetAddress.getLocalHost(), 20003, "Conclave Server");
+        ServerController testClave = ServerController.getInstance();
         testClave.addAdmin("MeggotZolu");
         testClave.startServer();
-        //} catch (UnknownHostException e)
-       // {
-        //    e.printStackTrace();
-        //}
     }
 }
-
-
-/**
- *      SecurityManager sm  = SecurityManager.getInstance();
-        String toBe = "This is my encrypted message";
-        String encryptedToBe = sm.encrypt(toBe);
-        String decryptedToBe = sm.decrypt(encryptedToBe);
-        System.out.println("Encrypted Message: " + toBe);
-        System.out.println("Encrypted Message: " + encryptedToBe);
-        System.out.println("Decrypted Message: " + decryptedToBe);
- */

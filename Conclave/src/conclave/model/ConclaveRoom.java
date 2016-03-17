@@ -15,7 +15,6 @@ import java.rmi.RemoteException;
  */
 public interface ConclaveRoom extends Remote{
     
-    public void startRoom() throws RemoteException;
     public void stopRoom() throws RemoteException;
     public void addUser(String userId, UserInterface user) throws RemoteException;
     public void removeUser(String userId) throws RemoteException;
@@ -35,4 +34,5 @@ public interface ConclaveRoom extends Remote{
     public void openRoom() throws RemoteException;
     public void addCensoredUser(String username) throws RemoteException;
     public void uncensorUser(String username) throws RemoteException;
+    public void kickUser(String username) throws RemoteException;
 }

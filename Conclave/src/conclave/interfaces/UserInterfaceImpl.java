@@ -84,6 +84,7 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
                 activeRoom = (ConclaveRoom) registry.lookup(entryName);
                 String username = account.getUsername();
                 if (activeRoom.isOnline()) {
+                    System.out.println("Reached.");
                     activeRoom.addUser(username, this);
                     connectionsLog = activeRoom.getAllConnections();
                     inRoom = true;
@@ -123,6 +124,11 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
             e.printStackTrace();
         }
         return ok;
+    }
+    
+    @Override
+    public boolean inRoom() throws RemoteException {
+        return inRoom;
     }
 
     @Override
@@ -248,7 +254,7 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements UserInterf
 
     @Override
     public String exportChatLog() {
-        return chatLog.viewEntries();
+       return chatLog.viewEntries();
     }
 
     @Override

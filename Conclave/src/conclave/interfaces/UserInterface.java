@@ -24,6 +24,8 @@ import java.util.List;
  * @author BradleyW
  */
 public interface UserInterface extends Remote {
+    
+    public boolean inRoom() throws RemoteException;
 
     public boolean joinRoom(String roomName) throws RemoteException;
 

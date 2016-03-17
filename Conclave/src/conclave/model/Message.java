@@ -6,7 +6,7 @@
 package conclave.model;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
+import java.util.Date;
 
 /**
  *
@@ -14,7 +14,7 @@ import java.sql.Timestamp;
  */
 public class Message implements Serializable {
     
-    private Timestamp timestamp;
+    private Date timestamp;
     private String sender;
     private String recipientId;
     private String msg;
@@ -23,7 +23,7 @@ public class Message implements Serializable {
     
     public Message(String isender, String irecipientId, String imsg, int messageTypei)
     {
-        timestamp = new Timestamp(System.currentTimeMillis());
+        timestamp = new Date();
         sender = isender;
         recipientId = irecipientId;
         msg = imsg;
@@ -37,7 +37,7 @@ public class Message implements Serializable {
     
     public String msgDisplay()
     {
-        String returnString = "[ " + timestamp.toString() + "] " + getType() + ": " + sender + ": " + msg;
+        String returnString = "[" + timestamp.getHours() + ":" + timestamp.getMinutes() + "] " + getType() + " - " + sender + ": " + msg;
         return returnString;
     }
     

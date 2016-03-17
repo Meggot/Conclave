@@ -34,7 +34,6 @@ public class ConnectionHandler implements Runnable {
     private OutputStream os;
     private final int timeOutPeriod = 3000;
     private static final Logger log = Logger.getLogger(ConnectionHandler.class.getName());
-
     private boolean loggedIn;
 
     public ConnectionHandler(Socket isock, int id) {
@@ -61,13 +60,10 @@ public class ConnectionHandler implements Runnable {
                     log.log(Level.INFO, "Recieved Request: {0}, sent back response: {1}.", new Object[]{commandLine, returnMsg});
                 }
                 if (loggedIn) {
-                    break;
+                   sock.close();
                 }
-                System.out.println("PORT OPEN");
             }
-            sock.close();
         } catch (IOException e) {
-
         } finally {
             try {
                 sock.close();
@@ -167,7 +163,7 @@ public class ConnectionHandler implements Runnable {
                         boolean creationSuccess = false;
                         try {
                             server.createAccount(username, password);
-                            creationSuccess = server.login(username, password);
+                            creationSuccess = server.isAUser(username);
                         } catch (ConnectException ex) {
                             Logger.getLogger(ConnectionHandler.class.getName()).log(Level.SEVERE, null, ex);
                         }

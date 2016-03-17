@@ -32,13 +32,14 @@ public class BroadcastPanel extends javax.swing.JPanel {
      */
     
     public static int lastPhotoID;
+    
     public BroadcastPanel(UserInterface ui) {
         initComponents();
         videoContainer.setPreferredSize(new Dimension(600, 400)); //This is to keep the container from collapsing.
         streamerName.setText("To stream, hit the stream button in the toolbar.");
         client = ui;
         streaming = false;
-        lastPhotoID = 0;
+        lastPhotoID = this.hashCode();
         openPanel();
         subscribeBroadcasterUpdates();
     }
@@ -229,9 +230,11 @@ public class BroadcastPanel extends javax.swing.JPanel {
 
     private void buttonDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDActionPerformed
         BufferedImage bi = videoPanel.image;
-        File outputfile = new File("Conclave_Screenshot" + lastPhotoID + ".png");
+        String fileName = "Conclave_Screenshot" + lastPhotoID++ +".png";
+        File outputfile = new File(fileName);
         try {
             ImageIO.write(bi, "png", outputfile);
+            client.updateChatLog(new Message("System", client.getUsername(), "You have taken a screenshot! Saved as: " + fileName, 2));
         } catch (IOException ex) {
             Logger.getLogger(BroadcastPanel.class.getName()).log(Level.SEVERE, null, ex);
         }

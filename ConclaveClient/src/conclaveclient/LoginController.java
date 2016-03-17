@@ -79,6 +79,9 @@ public class LoginController {
         } else if (commandWords[0].contains("403"))
         {
             returnString = "403 You have been banned from this server";
+        } else if (commandWords[0].contains("423"))
+        {
+            returnString = "423 User is currently logged in";
         }
         } catch (UnknownHostException e) {
             returnString = "That conclave server is currently down";

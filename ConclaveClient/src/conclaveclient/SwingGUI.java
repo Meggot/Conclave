@@ -21,6 +21,9 @@ import conclaveclient.Conference.display.BroadcastPanel;
 import conclaveclient.Conference.display.VideoPanel;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -52,8 +55,11 @@ public class SwingGUI extends javax.swing.JFrame {
     private boolean adminController;
     private BroadcastPanel broadcastPanel;
 
+    private static int lastExport;
+
     public SwingGUI(UserInterface ui) {
         try {
+            lastExport = 0;
             initComponents();
             client = ui;
             inRoom = false;
@@ -121,37 +127,6 @@ public class SwingGUI extends javax.swing.JFrame {
         pmSendButton = new java.awt.Button();
         pmLabel = new javax.swing.JLabel();
         filtersMsg = new javax.swing.ButtonGroup();
-        AdminPanel = new javax.swing.JPanel();
-        jLabel10 = new javax.swing.JLabel();
-        roomSelection = new javax.swing.JComboBox<>();
-        roomOpenButton = new javax.swing.JButton();
-        roomCloseButton = new javax.swing.JButton();
-        jSeparator2 = new javax.swing.JSeparator();
-        jLabel11 = new javax.swing.JLabel();
-        roomName = new javax.swing.JTextField();
-        jLabel12 = new javax.swing.JLabel();
-        jLabel13 = new javax.swing.JLabel();
-        roomTypeDropdown = new javax.swing.JComboBox<>();
-        privateCheckbox = new javax.swing.JCheckBox();
-        roomPassword = new javax.swing.JTextField();
-        jLabel15 = new javax.swing.JLabel();
-        jSeparator3 = new javax.swing.JSeparator();
-        jLabel14 = new javax.swing.JLabel();
-        playerSelection = new javax.swing.JComboBox<>();
-        banCheckbox = new javax.swing.JCheckBox();
-        banKickButton = new javax.swing.JButton();
-        jLabel17 = new javax.swing.JLabel();
-        oneWayMessageField = new javax.swing.JTextField();
-        sendMessage = new javax.swing.JButton();
-        createRoomButton = new javax.swing.JButton();
-        jLabel18 = new javax.swing.JLabel();
-        pardonPlayerSelection = new javax.swing.JComboBox<>();
-        pardonButton = new javax.swing.JButton();
-        jSeparator4 = new javax.swing.JSeparator();
-        announcmementField = new javax.swing.JTextField();
-        jLabel19 = new javax.swing.JLabel();
-        jLabel20 = new javax.swing.JLabel();
-        postAnnouncementButton = new javax.swing.JButton();
         frontpage = new javax.swing.JPanel();
         announcments = new java.awt.List();
         streamerControlPanel = new javax.swing.JPanel();
@@ -284,230 +259,6 @@ public class SwingGUI extends javax.swing.JFrame {
                     .addComponent(pmField)
                     .addComponent(pmSendButton, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
-        );
-
-        jLabel10.setText("Manage Room Visiblities");
-
-        roomSelection.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        roomSelection.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                roomSelectionActionPerformed(evt);
-            }
-        });
-
-        roomOpenButton.setText("Open");
-        roomOpenButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                roomOpenButtonActionPerformed(evt);
-            }
-        });
-
-        roomCloseButton.setText("Close");
-        roomCloseButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                roomCloseButtonActionPerformed(evt);
-            }
-        });
-
-        jLabel11.setText("Start a new Room");
-
-        jLabel12.setText("Name:");
-
-        jLabel13.setText("Type:");
-
-        roomTypeDropdown.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
-        privateCheckbox.setText("Private");
-        privateCheckbox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                privateCheckboxActionPerformed(evt);
-            }
-        });
-
-        roomPassword.setEnabled(false);
-
-        jLabel15.setText("Password:");
-
-        jLabel14.setText("Manage Connection:");
-
-        playerSelection.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        playerSelection.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                playerSelectionActionPerformed(evt);
-            }
-        });
-
-        banCheckbox.setText("Ban");
-
-        banKickButton.setText("Kick");
-        banKickButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                banKickButtonActionPerformed(evt);
-            }
-        });
-
-        jLabel17.setText("Send One-Way Message:");
-
-        sendMessage.setText("Send");
-        sendMessage.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                sendMessageActionPerformed(evt);
-            }
-        });
-
-        createRoomButton.setText("Create");
-        createRoomButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                createRoomButtonActionPerformed(evt);
-            }
-        });
-
-        jLabel18.setText("Revoke Ban:");
-
-        pardonPlayerSelection.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
-        pardonButton.setText("Pardon");
-        pardonButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                pardonButtonActionPerformed(evt);
-            }
-        });
-
-        jLabel19.setText("Server Announcements:");
-
-        jLabel20.setText("Field:");
-
-        postAnnouncementButton.setText("Post");
-        postAnnouncementButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                postAnnouncementButtonActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout AdminPanelLayout = new javax.swing.GroupLayout(AdminPanel);
-        AdminPanel.setLayout(AdminPanelLayout);
-        AdminPanelLayout.setHorizontalGroup(
-            AdminPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSeparator2)
-            .addGroup(AdminPanelLayout.createSequentialGroup()
-                .addGroup(AdminPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jSeparator3)
-                    .addComponent(jSeparator4, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(AdminPanelLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(AdminPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(AdminPanelLayout.createSequentialGroup()
-                                .addComponent(jLabel10)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(roomSelection, javax.swing.GroupLayout.PREFERRED_SIZE, 251, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(roomOpenButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(roomCloseButton))
-                            .addGroup(AdminPanelLayout.createSequentialGroup()
-                                .addComponent(jLabel13)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(roomTypeDropdown, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(privateCheckbox)
-                                .addGap(5, 5, 5)
-                                .addComponent(jLabel15)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(roomPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(createRoomButton, javax.swing.GroupLayout.DEFAULT_SIZE, 80, Short.MAX_VALUE))
-                            .addGroup(AdminPanelLayout.createSequentialGroup()
-                                .addComponent(jLabel11)
-                                .addGap(48, 48, 48)
-                                .addComponent(jLabel12)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(roomName))
-                            .addGroup(AdminPanelLayout.createSequentialGroup()
-                                .addGroup(AdminPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(AdminPanelLayout.createSequentialGroup()
-                                        .addComponent(jLabel17)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(oneWayMessageField, javax.swing.GroupLayout.PREFERRED_SIZE, 320, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(AdminPanelLayout.createSequentialGroup()
-                                        .addComponent(jLabel14)
-                                        .addGap(31, 31, 31)
-                                        .addComponent(playerSelection, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(banCheckbox)))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(AdminPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(banKickButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(sendMessage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                            .addGroup(AdminPanelLayout.createSequentialGroup()
-                                .addComponent(jLabel20)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(announcmementField, javax.swing.GroupLayout.PREFERRED_SIZE, 414, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(postAnnouncementButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(AdminPanelLayout.createSequentialGroup()
-                                .addComponent(jLabel19)
-                                .addGap(128, 431, Short.MAX_VALUE))
-                            .addGroup(AdminPanelLayout.createSequentialGroup()
-                                .addComponent(jLabel18)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(pardonPlayerSelection, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(pardonButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
-                .addContainerGap())
-        );
-        AdminPanelLayout.setVerticalGroup(
-            AdminPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(AdminPanelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(AdminPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel10)
-                    .addComponent(roomSelection, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(roomOpenButton)
-                    .addComponent(roomCloseButton))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(AdminPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(AdminPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(roomName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel12))
-                    .addComponent(jLabel11))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(AdminPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(roomPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel15)
-                    .addComponent(createRoomButton)
-                    .addComponent(jLabel13)
-                    .addComponent(roomTypeDropdown, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(privateCheckbox))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSeparator3, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(AdminPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel14)
-                    .addComponent(playerSelection, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(banCheckbox)
-                    .addComponent(banKickButton))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(AdminPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel17)
-                    .addComponent(oneWayMessageField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(sendMessage))
-                .addGap(30, 30, 30)
-                .addGroup(AdminPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel18)
-                    .addComponent(pardonPlayerSelection, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(pardonButton))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSeparator4, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jLabel19)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(AdminPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(announcmementField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel20)
-                    .addComponent(postAnnouncementButton))
-                .addGap(66, 66, 66))
         );
 
         javax.swing.GroupLayout frontpageLayout = new javax.swing.GroupLayout(frontpage);
@@ -877,9 +628,22 @@ public class SwingGUI extends javax.swing.JFrame {
 
     private void exportChatLogButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportChatLogButtonActionPerformed
         try {
-            System.out.println(client.exportChatLog());
+            String exportFileName = "ChatLog_" + client.getUsername() + lastExport++ + ".txt";
+            FileWriter fileWriter = new FileWriter(exportFileName);
+            BufferedWriter br = new BufferedWriter(fileWriter);
+            ArrayList<Message> lineWriter = new ArrayList(client.getChatlogUpdates(0));
+            String line = "";
+            for (Message message : lineWriter) {
+                line = message.msgDisplay();
+                br.write(line);
+                br.newLine();
+            }
+            br.close();
+            updateChatlog(new Message("System", client.getUsername(), "You have exported a chatlog, saved as: " + exportFileName, 2));
         } catch (RemoteException e) {
             e.printStackTrace();
+        } catch (IOException ex) {
+            Logger.getLogger(SwingGUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_exportChatLogButtonActionPerformed
 
@@ -897,8 +661,7 @@ public class SwingGUI extends javax.swing.JFrame {
 
     private void refreshConnectionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_refreshConnectionsActionPerformed
         try {
-            ConnectionsLog connectionsLog = client.viewAllConnections();
-            setConnectionsArea(connectionsLog);
+            refreshConnections();
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -959,136 +722,6 @@ public class SwingGUI extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jButton1ActionPerformed
-
-    private void privateCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_privateCheckboxActionPerformed
-        if (roomPassword.isEnabled()) {
-            roomPassword.setEnabled(false);
-        } else {
-            roomPassword.setEnabled(true);
-        }
-    }//GEN-LAST:event_privateCheckboxActionPerformed
-
-    private void banKickButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_banKickButtonActionPerformed
-        if (adminController) {
-            try {
-                Message kickStatus = new Message("System", client.getUsername(), "Cannot kick/ban that user", 2);
-                String connectionSelectUsername = (String) playerSelection.getSelectedItem();
-                AdminInterface controller = (AdminInterface) client;
-                boolean banned = banCheckbox.isSelected();
-                controller.kickUser(connectionSelectUsername, banned);
-                kickStatus.setMsgText("That user has been kicked/banned");
-                updateChatlog(kickStatus);
-            } catch (RemoteException e) {
-            }
-        }
-    }//GEN-LAST:event_banKickButtonActionPerformed
-
-    private void playerSelectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playerSelectionActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_playerSelectionActionPerformed
-
-    private void pardonButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pardonButtonActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_pardonButtonActionPerformed
-
-    private void roomOpenButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roomOpenButtonActionPerformed
-        if (adminController) {
-            try {
-                String roomselect = (String) roomSelection.getSelectedItem();
-                AdminInterface controller = (AdminInterface) client;
-                controller.openRoom(roomselect);
-                Message openRoomMsg = new Message("System", client.getUsername(), roomselect + " is now opened", 2);
-                updateChatlog(openRoomMsg);
-                initilizeAdminContents();
-            } catch (RemoteException e) {
-
-            }
-        }
-    }//GEN-LAST:event_roomOpenButtonActionPerformed
-
-    private void roomSelectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roomSelectionActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_roomSelectionActionPerformed
-
-    private void roomCloseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_roomCloseButtonActionPerformed
-        if (adminController) {
-            try {
-                String roomselect = (String) roomSelection.getSelectedItem();
-                AdminInterface controller = (AdminInterface) client;
-                controller.closeRoom(roomselect);
-                Message closeRoomMsg = new Message("System", client.getUsername(), roomselect + " is now closed", 2);
-                updateChatlog(closeRoomMsg);
-                initilizeAdminContents();
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-    }//GEN-LAST:event_roomCloseButtonActionPerformed
-
-    private void createRoomButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createRoomButtonActionPerformed
-        if (adminController) {
-            try {
-                Message createRoomStatus = new Message("System", client.getUsername(), "Room creation has failed", 2);
-                AdminInterface controller = (AdminInterface) client;
-                String newRoomName = roomName.getText();
-                String newRoomTypeName = (String) roomTypeDropdown.getSelectedItem();
-                int roomType = 0;
-                switch (newRoomTypeName) {
-                    case "TextRoom":
-                        roomType = 1;
-                        break;
-                    case "ConferenceRoom":
-                        roomType = 2;
-                        break;
-                }
-                if (privateCheckbox.isSelected()) {
-                    String roomPasswordptext = roomPassword.getText();
-                    if (roomPasswordptext != null) {
-                        controller.addRoom(newRoomName, roomType, roomPasswordptext);
-                        createRoomStatus.setMsgText("Private room successfully created");
-                    } else {
-                        createRoomStatus.setMsgText("You must enter a password to create a private room");
-                    }
-                } else {
-                    controller.addRoom(newRoomName, roomType);
-                    createRoomStatus.setMsgText("Open room successfully created");
-                }
-                updateChatlog(createRoomStatus);
-                initilizeAdminContents();
-            } catch (RemoteException e) {
-
-            }
-        }
-    }//GEN-LAST:event_createRoomButtonActionPerformed
-
-    private void sendMessageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendMessageActionPerformed
-        String msg = oneWayMessageField.getText();
-        String username = (String) playerSelection.getSelectedItem();
-        Message sendMessage = new Message(username, username, msg, 4);
-        if (msg != null) {
-            try {
-                AdminInterface controller = (AdminInterface) client;
-                controller.sendAdminMessage(sendMessage, username);
-                updateChatlog(sendMessage);
-            } catch (RemoteException ex) {
-                Logger.getLogger(SwingGUI.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }//GEN-LAST:event_sendMessageActionPerformed
-
-    private void postAnnouncementButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_postAnnouncementButtonActionPerformed
-        if (adminController) {
-            try {
-                String msg = announcmementField.getText();
-                if (msg != null) {
-                    AdminInterface controller = (AdminInterface) client;
-                    controller.postAnnouncment(msg);
-                }
-            } catch (RemoteException e) {
-
-            }
-        }
-    }//GEN-LAST:event_postAnnouncementButtonActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
 
@@ -1188,14 +821,19 @@ public class SwingGUI extends javax.swing.JFrame {
 
     private void validatePassword(String entryName, String passwordEntry) {
         try {
+            String msg = "Error";
             boolean validated = client.joinRoom(entryName, passwordEntry);
             if (validated) {
-                joinRoom(entryName);
+                msg = "Correct Password";
+                interactablePanel.removeAll();
+                inRoom = true;
+                if (client.getRoomType() == 2) {
+                    buildBroadcastPanel();
+                }
             } else {
-                String incorrectMsg = "Incorrect password";
-                Message msg = new Message("System", client.getUsername(), incorrectMsg, 2);
-                client.updateChatLog(msg);
+                msg = "Incorrect password";
             }
+            client.updateChatLog(new Message("System", client.getUsername(), msg, 2));
         } catch (RemoteException e) {
 
         }
@@ -1204,12 +842,12 @@ public class SwingGUI extends javax.swing.JFrame {
     private void joinRoom(String entryName) {
         try {
             boolean joined = client.joinRoom(entryName);
-            if (!joined) {
-            interactablePanel.removeAll();
-            inRoom = true;
-            if (client.getRoomType() == 2) {
-                buildBroadcastPanel();
-            }
+            if (joined) {
+                interactablePanel.removeAll();
+                inRoom = true;
+                if (client.getRoomType() == 2) {
+                    buildBroadcastPanel();
+                }
             } else {
                 updateChatlog(new Message("System", client.getUsername(), "You cannot connect to that room", 2));
             }
@@ -1250,8 +888,9 @@ public class SwingGUI extends javax.swing.JFrame {
             public void run() {
                 try {
                     while (client.isConnected()) {
+                        inRoom = client.inRoom();
                         if (client.hasConnectionsUpdated()) {
-                            setConnectionsArea(client.viewAllConnections());
+                            refreshConnections();
                         }
                         if (client.hasFrontpageUpdated()) {
                             updateFrontpage();
@@ -1269,6 +908,16 @@ public class SwingGUI extends javax.swing.JFrame {
                         }
                         Thread.sleep(500);
                     }
+                    updateChatlog(new Message("System", client.getUsername(), "You have been disconnected, Conclave will exit soon.", 2));
+                    if (inRoom) {
+                        if (client.getRoomType() == 2 && broadcastPanel != null) {
+                            broadcastPanel.stop();
+                        }
+                        client.leaveRoom();
+                    }
+                    inRoom = false;
+                    Thread.sleep(3000);
+                    System.exit(-1);
                 } catch (RemoteException | InterruptedException e) {
                 }
             }
@@ -1288,16 +937,11 @@ public class SwingGUI extends javax.swing.JFrame {
      */
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel AdminPanel;
     private javax.swing.JCheckBox adminFilterCheckbox;
-    private javax.swing.JTextField announcmementField;
     private java.awt.List announcments;
-    private javax.swing.JCheckBox banCheckbox;
-    private javax.swing.JButton banKickButton;
     private javax.swing.JPanel chatlogFilterPanel;
     private javax.swing.JPanel connectionsPanel;
     private javax.swing.JScrollPane connectionsScrollPanel;
-    private javax.swing.JButton createRoomButton;
     private javax.swing.JButton disconnectButton;
     private javax.swing.JButton exportChatLogButton;
     private javax.swing.JLabel filterLabel;
@@ -1309,17 +953,7 @@ public class SwingGUI extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JComboBox<String> jComboBox2;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel10;
-    private javax.swing.JLabel jLabel11;
-    private javax.swing.JLabel jLabel12;
-    private javax.swing.JLabel jLabel13;
-    private javax.swing.JLabel jLabel14;
-    private javax.swing.JLabel jLabel15;
-    private javax.swing.JLabel jLabel17;
-    private javax.swing.JLabel jLabel18;
-    private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -1335,34 +969,18 @@ public class SwingGUI extends javax.swing.JFrame {
     private javax.swing.JPasswordField jPasswordField1;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JSeparator jSeparator2;
-    private javax.swing.JSeparator jSeparator3;
-    private javax.swing.JSeparator jSeparator4;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JButton leaveRoomButton;
-    private javax.swing.JTextField oneWayMessageField;
-    private javax.swing.JButton pardonButton;
-    private javax.swing.JComboBox<String> pardonPlayerSelection;
     private javax.swing.JPanel passwordFormPanel;
-    private javax.swing.JComboBox<String> playerSelection;
     private javax.swing.JTextField pmField;
     private javax.swing.JLabel pmLabel;
     private java.awt.Button pmSendButton;
-    private javax.swing.JButton postAnnouncementButton;
-    private javax.swing.JCheckBox privateCheckbox;
     private javax.swing.JCheckBox privateFilterCheckbox;
     private javax.swing.JPanel privateMsgPanel;
     private javax.swing.JButton refreshConnections;
-    private javax.swing.JButton roomCloseButton;
     private javax.swing.JCheckBox roomFilterCheckbox;
-    private javax.swing.JTextField roomName;
-    private javax.swing.JButton roomOpenButton;
-    private javax.swing.JTextField roomPassword;
     private javax.swing.JTextField roomPasswordEntry;
     private javax.swing.JButton roomPasswordSubmit;
-    private javax.swing.JComboBox<String> roomSelection;
-    private javax.swing.JComboBox<String> roomTypeDropdown;
-    private javax.swing.JButton sendMessage;
     private javax.swing.JButton sendMessageButton;
     private javax.swing.JButton streamButton;
     private javax.swing.JPanel streamerControlPanel;
@@ -1374,34 +992,8 @@ public class SwingGUI extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
 
     private void initilizeAdminTab() {
-        tabbedPanel.add("Admin", AdminPanel);
-        initilizeAdminContents();
-    }
-
-    private void initilizeAdminContents() {
-        roomSelection.removeAllItems();
-        roomTypeDropdown.removeAllItems();
-        playerSelection.removeAllItems();
-        adminController = true;
-        try {
-            AdminInterface controller = (AdminInterface) client;
-            List<String> roomNames = controller.getRoomNames();
-            for (String name : roomNames) {
-                roomSelection.addItem(name);
-            }
-            List<String> supportedRoomTypes = controller.getSupportedRoomTypes();
-            for (String roomType : supportedRoomTypes) {
-                roomTypeDropdown.addItem(roomType);
-            }
-            List<String> activeUserNames = controller.getAllConnectedUsernames();
-            for (String username : activeUserNames) {
-                playerSelection.addItem(username);
-            }
-        } catch (RemoteException e) {
-
-        }
-
-        pack();
+        AdminPanel adminPanel = new AdminPanel(client);
+        tabbedPanel.add("Admin", adminPanel);
     }
 
     private void buildBroadcastPanel() {
@@ -1409,5 +1001,10 @@ public class SwingGUI extends javax.swing.JFrame {
         interactablePanel.removeAll();
         interactablePanel.add(broadcastPanel);
         pack();
+    }
+
+    private void refreshConnections() throws RemoteException {
+        ConnectionsLog connectionsLog = client.viewAllConnections();
+        setConnectionsArea(connectionsLog);
     }
 }

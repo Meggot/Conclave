@@ -5,6 +5,7 @@
  */
 package conclave.ConclaveHandlers;
 
+import util.Encryptor;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;

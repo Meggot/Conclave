@@ -5,7 +5,8 @@
  */
 package conclave.model;
 
-import conclave.interfaces.UserInterface;
+import model.ConnectionsLog;
+import model.Message;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -13,18 +14,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import conclaveinterfaces.IConclaveRoom;
+import conclaveinterfaces.IUserInterface;
 
 /**
  *
  * @author BradleyW
  */
-public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
+public class TextRoom extends UnicastRemoteObject implements IConclaveRoom {
     
     public String roomName;
     public int roomLimit;
     public int currentConnections;
     
-    public HashMap<String, UserInterface> roomConnections;
+    public HashMap<String, IUserInterface> roomConnections;
     public ConnectionsLog connectionsLog;
     public ArrayList<String> censorList;
     
@@ -43,6 +46,7 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
         roomType = 1;
         currentConnections = 0;
     }
+    
     /**
      * CONTROL METHODS
      * @throws java.rmi.RemoteException
@@ -60,7 +64,7 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     }
     
     @Override
-    public void addUser(String username, UserInterface user) throws RemoteException
+    public void addUser(String username, IUserInterface user) throws RemoteException
     {
         if (currentConnections < roomLimit)
         {
@@ -80,7 +84,7 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     {
         String msg = "You have been removed from the room";
         Message removeMessage = new Message(roomName, username, msg, 2);
-        UserInterface ui = roomConnections.get(username);
+        IUserInterface ui = roomConnections.get(username);
         if (ui!=null)
         {
             ui.updateChatLog(removeMessage);
@@ -111,7 +115,7 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     @Override
     public void updateAllClientsChatlog(Message msg) throws RemoteException
     {
-            for (UserInterface ui : roomConnections.values())
+            for (IUserInterface ui : roomConnections.values())
             {
                 try {
                     ui.updateChatLog(msg);
@@ -152,7 +156,7 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     @Override
     public void updateAllClientsConnections() throws RemoteException
     {
-        for (UserInterface ui : roomConnections.values())
+        for (IUserInterface ui : roomConnections.values())
         {
             try {
                 ui.updateConnections(connectionsLog);
@@ -180,7 +184,7 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     public void whisper(Message msg) throws RemoteException 
     {
         String recipientUsername = msg.getRecipientId();
-        UserInterface ui = roomConnections.get(recipientUsername);
+        IUserInterface ui = roomConnections.get(recipientUsername);
         ui.updateChatLog(msg);
     }
     
@@ -188,7 +192,7 @@ public class TextRoom extends UnicastRemoteObject implements ConclaveRoom {
     @Override
     public void kickUser(String username) throws RemoteException 
     {
-        UserInterface ui = roomConnections.get(username);
+        IUserInterface ui = roomConnections.get(username);
         ui.leaveRoom();
     }
     /**

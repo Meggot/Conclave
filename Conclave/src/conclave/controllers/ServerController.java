@@ -3,34 +3,38 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package conclave;
+package conclave.controllers;
 
-import conclave.ConclaveHandlers.ServerManager;
+import util.CSVWriter;
 import conclave.ConclaveHandlers.AccountManager;
-import conclave.ConclaveHandlers.ConnectionHandler;
+import conclave.ConclaveHandlers.ClientHandler;
 import conclave.ConclaveHandlers.RoomManager;
 import conclave.db.Account;
-import conclave.interfaces.AdminInterfaceImpl;
-import conclave.interfaces.UserInterface;
-import conclave.interfaces.UserInterfaceImpl;
-import conclave.model.ConnectionsLog;
-import conclave.model.Message;
-import conclave.model.ServerFrontpage;
 import conclave.rmiPolicy.RMISecurityPolicyLoader;
+import conclave.rmiPolicy.RegistryLoader;
+import conclaveinterfaces.IUserInterface;
+import java.io.IOException;
+import java.net.BindException;
 import java.net.InetAddress;
 import java.net.ConnectException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import model.ConnectionsLog;
+import model.Message;
+import model.ServerFrontpage;
 
 public class ServerController implements Remote {
 
@@ -39,12 +43,17 @@ public class ServerController implements Remote {
     private int port;
     private boolean open;
 
+    private static int serverTicks;
+
+    private int clientConnections;
+
+    //For performance logging, we will be exporting the performance information into a csv file.
+    //Using a fileWriter
     //Collections to host all the needed connection info.
     // TO avoid Concurrency exceptions like ConcurrentModificationException, we use
     //special java.util.concurrent library collections, like a conccurentHashMap, and a
     //"CopyOnWriteArraylist" which creates a copy of the collection when it edits.
-    
-    private ConcurrentHashMap<String, UserInterface> connections = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, IUserInterface> connections = new ConcurrentHashMap<>();
     private CopyOnWriteArrayList<String> serverAdmins = new CopyOnWriteArrayList();
     private CopyOnWriteArrayList<String> bannedUsers = new CopyOnWriteArrayList();
 
@@ -52,9 +61,13 @@ public class ServerController implements Remote {
     ServerManager serverManager;
     AccountManager accountManager;
     RoomManager roomManager;
-
+    CSVWriter performance;
     private static ServerController instance;
     private static final Logger log = Logger.getLogger(ServerController.class.getName());
+
+    private static final int HANDLERS = 10;
+
+    private ExecutorService pool = null;
 
     public static synchronized ServerController getInstance() {
         if (instance == null) {
@@ -64,55 +77,40 @@ public class ServerController implements Remote {
     }
 
     private ServerController() {
+        pool = Executors.newFixedThreadPool(HANDLERS);
+        serverTicks = 0;
+        name = "LAN Conclave Server";
         accountManager = new AccountManager();
         roomManager = RoomManager.getInstance();
         frontpage = new ServerFrontpage();
         instance = this;
-        name = "LAN Conclave Server";
         frontpage.addNewAnnouncment(name, "Welcome to " + name);
-        try {
-            ip = InetAddress.getLocalHost();
-        } catch (UnknownHostException ex) {
-            log.log(Level.SEVERE, "Failed to startup the server on localhost", ex);
-        }
-        port = 20003;
-        if (ip != null) {
-            log.log(Level.INFO, "A LAN has been initilized.");
-        }
-        open = true;
-        Thread ConnectionManager = new Thread(new Runnable() {
+        open = false;
+        Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                while (open) {
-                    for (String name : connections.keySet()) {
-                        try {
-                            UserInterface uiTemp = connections.get(name);
-                            if (!uiTemp.isConnected()) {
-                                disconnectUser(name);
-                            }
-                        } catch (RemoteException e) {
-                            disconnectUser(name);
-                        }
-                    }
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(ServerController.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
+                System.out.println("Stopping Server");
+                stopServer();
             }
-
         });
-        ConnectionManager.start();
     }
 
+    /**
+     * 
+     * @param name 
+     */
     public void disconnectUser(String name) {
         if (connections.containsKey(name)) {
             connections.remove(name);
             try {
                 roomManager.kickUser(name, false);
+                Registry register = LocateRegistry.getRegistry();
+                //register.unbind(name);
             } catch (RemoteException ex) {
                 Logger.getLogger(ServerController.class.getName()).log(Level.SEVERE, null, ex);
+                //} catch (NotBoundException ex)
+                //{
+                //   Logger.getLogger(ServerController.class.getName()).log(Level.SEVERE, null, ex);
             }
             log.log(Level.INFO, "User: {0} has terminated their connection.", name);
         }
@@ -123,7 +121,7 @@ public class ServerController implements Remote {
             if (System.getSecurityManager() == null) {
                 RMISecurityPolicyLoader.LoadPolicy("RMISecurity.policy");
             }
-            LocateRegistry.createRegistry(9807);
+            RegistryLoader.Load();
         } catch (RemoteException e) {
             log.log(Level.SEVERE, "Failed to load the RMI registry", e);
             stopServer();
@@ -142,21 +140,115 @@ public class ServerController implements Remote {
         this.ip = ip;
     }
 
+    public boolean isBanned(String username) {
+        boolean is = false;
+        if  (bannedUsers.contains(username))
+        {
+            is = true;
+        }
+        return is;
+    }
+
+    public class ServerManager implements Runnable {
+        private final InetAddress ip;
+        private final int port;
+        private boolean open;
+        public ServerManager(InetAddress ip, int port) {
+            this.ip = ip;
+            this.port = port;
+            open = false;
+        }
+
+        public boolean isOpen() {
+            return open;
+        }
+
+        @Override
+        public void run() {
+            open = true;
+            try {
+                ServerSocket servSock = new ServerSocket(port, 50, ip);
+                servSock.setReuseAddress(true);
+                while (open) {
+                    Socket clientSocket = servSock.accept();
+                    clientConnections++;
+                    ClientHandler handler = new ClientHandler(clientSocket);
+                    System.out.println("CLIENT CONNECTED..");
+                    pool.execute(handler);
+                }
+            } catch (BindException e) {
+                System.out.println("A conclave server is already running on that IP and port.");
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                stopServer();
+                pool.shutdown();
+            }
+        }
+
+        public void stopServer() {
+            open = false;
+            log.log(Level.INFO, "The server has been stopped");
+        }
+
+    }
+
     public void startServer() {
         loadRMI();
         startRooms();
-        open = true;
+        try {
+            ip = InetAddress.getLocalHost();
+        } catch (UnknownHostException ex) {
+            log.log(Level.SEVERE, "Failed to startup the server on localhost", ex);
+        }
+        port = 20003;
+        if (ip != null) {
+            log.log(Level.INFO, "A LAN has been initilized.");
+        }
+
         serverManager = new ServerManager(ip, port);
-        serverManager.start();
+        pool.submit(serverManager);
+        performance = new CSVWriter(name + "-" + System.currentTimeMillis());
         if (serverManager.isOpen()) {
             log.log(Level.INFO, "Server: {0} has been started, and is now open to new connections", name);
+            open = true;
+            Thread ConnectionManager = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (open) {
+                        for (String name : connections.keySet()) {
+                            try {
+                                IUserInterface uiTemp = connections.get(name);
+                                if (!uiTemp.isConnected()) {
+                                    disconnectUser(name);
+                                }
+                            } catch (RemoteException e) {
+                                disconnectUser(name);
+                            }
+                        }
+                        try {
+                            Thread.sleep(1000);
+                            serverTicks++;
+                            performance.systemLog(serverTicks, clientConnections, connections.size());
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(ServerController.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+
+            });
+            ConnectionManager.start();
+        } else {
+            log.log(Level.SEVERE, "Server failed to start");
+            open = false;
         }
     }
 
     public String viewAllConnections() throws RemoteException {
         String returnString = "";
         int i = 0;
-        for (UserInterface connection : connections.values()) {
+        for (IUserInterface connection : connections.values()) {
             returnString = returnString + " User " + i + ":" + connection.getUsername();
             i++;
         }
@@ -190,7 +282,7 @@ public class ServerController implements Remote {
     }
 
     public void updateAllClientsFrontpage(String username, String msg) {
-        for (UserInterface ui : connections.values()) {
+        for (IUserInterface ui : connections.values()) {
             try {
                 ui.updateFrontpage(username, msg);
             } catch (RemoteException ex) {
@@ -198,9 +290,9 @@ public class ServerController implements Remote {
             }
         }
     }
-    
+
     public void updateAllClientsConnections() {
-        for (UserInterface ui : connections.values()) {
+        for (IUserInterface ui : connections.values()) {
             try {
                 ui.updateConnections(roomManager.returnRooms());
             } catch (RemoteException ex) {
@@ -246,11 +338,21 @@ public class ServerController implements Remote {
         return false;
     }
 
+    public void anonUserConnect() {
+        clientConnections++;
+        System.out.println("ANONUSER CONNECTED");
+    }
+
+    public void anonUserDisconnect() {
+        clientConnections--;
+        System.out.println("ANONUSER DISCONNECTED");
+    }
+
     public void addNewInterface(Account returnedAccount) throws ConnectException {
         try {
             String username = returnedAccount.getUsername();
             if (isAUser(username)) {
-                UserInterface newUI;
+                IUserInterface newUI;
                 if (isAAdmin(username)) {
                     newUI = new AdminInterfaceImpl(returnedAccount, this);
                 } else {
@@ -275,14 +377,6 @@ public class ServerController implements Remote {
         log.log(Level.INFO, "A new Admin has been added: {0}", username);
     }
 
-    public void createGuestAccount(String username) throws ConnectException {
-        if (username.length() >= 5 && !accountManager.isAUser(username)) {
-            String guestPassword = "GUESTSESSION";
-            accountManager.addAccount(username, guestPassword);
-            log.log(Level.INFO, "A new guest account has been created with the username: {0}", username);
-        }
-    }
-
     public void createAccount(String username, String password) throws ConnectException {
         if (username.length() >= 5 && password.length() >= 5) {
             accountManager.addAccount(username, password);
@@ -300,11 +394,16 @@ public class ServerController implements Remote {
             disconnectUser(name);
         }
         open = false;
+        performance.close();
     }
 
-    public void alertUser(Message msg, String username) throws RemoteException {
-        UserInterface user = connections.get(username);
-        user.recievePrivateMessage(msg);
+    public void alertUser(Message msg, String username){
+        IUserInterface user = connections.get(username);
+        try {
+            user.recievePrivateMessage(msg);
+        } catch (RemoteException ex) {
+            Logger.getLogger(ServerController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public boolean isUserLoggedIn(String username) {
@@ -317,7 +416,7 @@ public class ServerController implements Remote {
 
     public void banUser(String username) {
         if (connections.containsKey(username)) {
-            UserInterface ui = connections.get(username);
+            IUserInterface ui = connections.get(username);
             try {
                 ui.recievePrivateMessage(new Message("System", username, "You have been banned from the server", 3));
                 roomManager.kickUser(username, true);

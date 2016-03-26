@@ -5,8 +5,9 @@
  */
 package conclave.model;
 
-import conclave.interfaces.IConferenceRoom;
-import conclave.interfaces.UserInterface;
+import conclaveinterfaces.IConferenceRoom;
+import conclaveinterfaces.IUserInterface;
+import model.Message;
 import java.awt.Dimension;
 import java.net.InetSocketAddress;
 import java.rmi.RemoteException;
@@ -55,7 +56,7 @@ public class ConferenceRoom extends TextRoom implements IConferenceRoom {
     }
 
     public void updateActiveListeners() throws RemoteException {
-        for (UserInterface ui : roomConnections.values()) {
+        for (IUserInterface ui : roomConnections.values()) {
             ui.updateStreamer();
         }
     }

@@ -90,7 +90,6 @@ public class AccountManager {
 
     public boolean isAUser(String username) throws ConnectException {
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConclavePU");
-        String allUsers = "";
         EntityManager manager = emf.createEntityManager();
         Query query = manager.createNamedQuery("Account.findAll");
         List<Account> accounts = query.getResultList();

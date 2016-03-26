@@ -18,6 +18,7 @@ public class RMISecurityPolicyLoader {
     {
         LoadPolicy("RMISecurity.policy");
     }
+    
     public static void LoadPolicy(String policy) {
         if (loaded) {    return;     }
         loaded = true;

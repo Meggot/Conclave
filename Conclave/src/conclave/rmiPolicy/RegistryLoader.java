@@ -11,15 +11,20 @@ import java.rmi.RemoteException;
  *
  * @author BradleyW
  */
-class RegistryLoader {
-private static boolean loaded=false;
-public static void Load() throws RemoteException
-{
-    if (loaded) return;
-        java.rmi.registry.LocateRegistry.createRegistry( 8090 );
-        System.out.println( "Started Registry" );
-        loaded=true;
-}
-private RegistryLoader() {}
-}
+public class RegistryLoader {
 
+    private static boolean loaded = false;
+
+    public static void Load() throws RemoteException {
+        if (loaded) {
+            return;
+        }
+        System.setProperty("java.rmi.server.hostname","192.168.0.7");
+        java.rmi.registry.LocateRegistry.createRegistry(9807);
+        System.out.println("Started Registry");
+        loaded = true;
+    }
+
+    private RegistryLoader() {
+    }
+}

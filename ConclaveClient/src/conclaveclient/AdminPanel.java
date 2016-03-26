@@ -5,9 +5,9 @@
  */
 package conclaveclient;
 
-import conclave.interfaces.AdminInterface;
-import conclave.interfaces.UserInterface;
-import conclave.model.Message;
+import conclaveinterfaces.IAdminInterface;
+import conclaveinterfaces.IUserInterface;
+import model.Message;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.logging.Level;
@@ -20,15 +20,15 @@ import java.util.logging.Logger;
 public class AdminPanel extends javax.swing.JPanel {
 
     boolean adminController;
-    AdminInterface controller;
+    IAdminInterface controller;
 
     /**
      * Creates new form AdminPanel
      */
-    public AdminPanel(UserInterface ui) {
+    public AdminPanel(IUserInterface ui) {
         initComponents();
         adminController = true;
-        controller = (AdminInterface) ui;
+        controller = (IAdminInterface) ui;
         initilizeAdminContents();
         Thread adminUpdater = new Thread(new Runnable() {
             @Override

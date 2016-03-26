@@ -82,7 +82,7 @@ public class VideoPanel extends JPanel {
             public void run() {
                 image = update;
                 repaint();
-                revalidate();
+                //revalidate();
             }
         });
     }

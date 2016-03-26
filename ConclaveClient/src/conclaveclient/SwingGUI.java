@@ -9,16 +9,15 @@ import conclaveclient.Conference.StreamClientAgent;
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.WebcamPanel;
 import com.github.sarxos.webcam.WebcamResolution;
-import conclave.interfaces.AdminInterface;
-import conclave.interfaces.UserInterface;
-import conclave.model.Announcement;
-import conclave.model.ConnectionsLog;
-import conclave.model.ConnectionEntry;
-import conclave.model.Message;
+import model.Announcement;
+import model.ConnectionsLog;
+import model.ConnectionEntry;
+import model.Message;
 import conclaveclient.Conference.ListeningClient;
 import conclaveclient.Conference.StreamingServer;
 import conclaveclient.Conference.display.BroadcastPanel;
 import conclaveclient.Conference.display.VideoPanel;
+import conclaveinterfaces.IUserInterface;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.io.BufferedWriter;
@@ -48,16 +47,15 @@ import javax.swing.SwingConstants;
  */
 public class SwingGUI extends javax.swing.JFrame {
 
-    public UserInterface client;
+    public IUserInterface client;
     private boolean inRoom;
     private int lastMessageLine;
     private ArrayList<String> chatlogViewCategories = new ArrayList<String>();
     private boolean adminController;
     private BroadcastPanel broadcastPanel;
-
     private static int lastExport;
 
-    public SwingGUI(UserInterface ui) {
+    public SwingGUI(IUserInterface ui) {
         try {
             lastExport = 0;
             initComponents();
@@ -78,7 +76,6 @@ public class SwingGUI extends javax.swing.JFrame {
                 updateChatlog(new Message("Conclave", "Conclave", "You have logged in as an Admin", 2));
                 initilizeAdminTab();
             }
-            initilizeTabs();
             startUpdates();
             pack();
             Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -95,11 +92,6 @@ public class SwingGUI extends javax.swing.JFrame {
         } catch (RemoteException e) {
             e.printStackTrace();
         }
-    }
-
-    private void initilizeTabs() {
-        //tabbedPanel.add("Main", interactablePanel);
-        //tabbedPanel.add("Configuration", configurationPanel);
     }
 
     /**
@@ -132,6 +124,7 @@ public class SwingGUI extends javax.swing.JFrame {
         streamerControlPanel = new javax.swing.JPanel();
         jButton2 = new javax.swing.JButton();
         streamButton = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
         connectionsScrollPanel = new javax.swing.JScrollPane();
         connectionsPanel = new javax.swing.JPanel();
         textLog = new java.awt.TextArea();
@@ -151,18 +144,6 @@ public class SwingGUI extends javax.swing.JFrame {
         filterLabel = new javax.swing.JLabel();
         tabbedPanel = new javax.swing.JTabbedPane();
         interactablePanel = new javax.swing.JPanel();
-        jPanel1 = new javax.swing.JPanel();
-        jTextField1 = new javax.swing.JTextField();
-        jLabel4 = new javax.swing.JLabel();
-        jLabel5 = new javax.swing.JLabel();
-        jPasswordField1 = new javax.swing.JPasswordField();
-        jLabel6 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
-        jLabel7 = new javax.swing.JLabel();
-        jComboBox1 = new javax.swing.JComboBox<>();
-        jLabel8 = new javax.swing.JLabel();
-        jComboBox2 = new javax.swing.JComboBox<>();
-        jLabel9 = new javax.swing.JLabel();
 
         jMenuItem1.setText("jMenuItem1");
 
@@ -443,96 +424,6 @@ public class SwingGUI extends javax.swing.JFrame {
         interactablePanel.setMaximumSize(new java.awt.Dimension(1000, 800));
         tabbedPanel.addTab("Main", interactablePanel);
 
-        jTextField1.setText("jTextField1");
-
-        jLabel4.setText("Account Configuration");
-
-        jLabel5.setText("Display Name:");
-
-        jPasswordField1.setText("jPasswordField1");
-
-        jLabel6.setText("Password:");
-
-        jButton1.setText("Save");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
-
-        jLabel7.setText("Chatlog Preferences");
-
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
-        jLabel8.setText("Font:");
-
-        jComboBox2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
-        jLabel9.setText("Font Size:");
-
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel4)
-                            .addComponent(jLabel7))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(12, 12, 12)
-                                .addComponent(jLabel5)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                                .addComponent(jLabel8)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 176, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(32, 32, 32)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel6)
-                            .addComponent(jLabel9))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, 131, Short.MAX_VALUE))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, Short.MAX_VALUE)))))
-                .addContainerGap())
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(4, 4, 4)
-                .addComponent(jLabel4)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel6)
-                    .addComponent(jButton1))
-                .addGap(18, 18, 18)
-                .addComponent(jLabel7)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel8)
-                    .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel9))
-                .addContainerGap(175, Short.MAX_VALUE))
-        );
-
-        tabbedPanel.addTab("Configuration", jPanel1);
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -620,6 +511,8 @@ public class SwingGUI extends javax.swing.JFrame {
                 client.leaveRoom();
                 inRoom = false;
                 buildFrontpage();
+            } else {
+                updateChatlog(new Message("System", client.getUsername(), "You are not in a room", 2));
             }
         } catch (RemoteException e) {
 
@@ -719,10 +612,6 @@ public class SwingGUI extends javax.swing.JFrame {
         resetChatlogView();
     }//GEN-LAST:event_adminFilterCheckboxActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton1ActionPerformed
-
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
 
     }//GEN-LAST:event_jButton2ActionPerformed
@@ -745,7 +634,6 @@ public class SwingGUI extends javax.swing.JFrame {
         textLog.setText("");
         lastMessageLine = 0;
     }
-// Jess has a peach
 
     private void buildFrontpage() {
         interactablePanel.removeAll();
@@ -948,28 +836,17 @@ public class SwingGUI extends javax.swing.JFrame {
     private javax.swing.ButtonGroup filtersMsg;
     private javax.swing.JPanel frontpage;
     private javax.swing.JPanel interactablePanel;
-    private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
-    private javax.swing.JComboBox<String> jComboBox1;
-    private javax.swing.JComboBox<String> jComboBox2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
-    private javax.swing.JLabel jLabel8;
-    private javax.swing.JLabel jLabel9;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPasswordField jPasswordField1;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JTextField jTextField1;
     private javax.swing.JButton leaveRoomButton;
     private javax.swing.JPanel passwordFormPanel;
     private javax.swing.JTextField pmField;

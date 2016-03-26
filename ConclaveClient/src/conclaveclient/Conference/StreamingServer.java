@@ -9,7 +9,11 @@ import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.WebcamPanel;
 import com.github.sarxos.webcam.WebcamResolution;
 import java.awt.Dimension;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -23,7 +27,11 @@ public class StreamingServer {
     InetSocketAddress socketAddress;
     
     public StreamingServer() {
-        socketAddress = new InetSocketAddress("localhost", 20000);
+        try {
+            socketAddress = new InetSocketAddress(InetAddress.getLocalHost(), 20000);
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(StreamingServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
         webcam = Webcam.getDefault();
         dimension = WebcamResolution.VGA.getSize();
         webcam.setViewSize(dimension);

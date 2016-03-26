@@ -5,11 +5,11 @@
  */
 package conclaveclient.Conference.display;
 
-import conclave.interfaces.IConferenceRoom;
-import conclave.interfaces.UserInterface;
-import conclave.model.Message;
+import com.github.sarxos.webcam.Webcam;
+import model.Message;
 import conclaveclient.Conference.ListeningClient;
 import conclaveclient.Conference.StreamingServer;
+import conclaveinterfaces.IUserInterface;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -30,10 +30,9 @@ public class BroadcastPanel extends javax.swing.JPanel {
     /**
      * Creates new form BroadcastPanel
      */
-    
     public static int lastPhotoID;
-    
-    public BroadcastPanel(UserInterface ui) {
+
+    public BroadcastPanel(IUserInterface ui) {
         initComponents();
         videoContainer.setPreferredSize(new Dimension(600, 400)); //This is to keep the container from collapsing.
         streamerName.setText("To stream, hit the stream button in the toolbar.");
@@ -48,13 +47,14 @@ public class BroadcastPanel extends javax.swing.JPanel {
         active = true;
         videoPanel.setVisible(true);
     }
+
     public void emptyPanel() {
         active = false;
         streamerName.setText("");
         videoPanel.setVisible(false);
     }
 
-    private UserInterface client;
+    private IUserInterface client;
     private boolean active;
     private StreamingServer streamingServer;
     private boolean streaming;
@@ -170,16 +170,16 @@ public class BroadcastPanel extends javax.swing.JPanel {
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(buttonsPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(85, 85, 85))
             .addGroup(layout.createSequentialGroup()
                 .addGap(42, 42, 42)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(streamerName)
                     .addComponent(videoContainer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(buttonsPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(56, 56, 56))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -188,9 +188,9 @@ public class BroadcastPanel extends javax.swing.JPanel {
                 .addComponent(streamerName)
                 .addGap(7, 7, 7)
                 .addComponent(videoContainer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonsPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -210,12 +210,20 @@ public class BroadcastPanel extends javax.swing.JPanel {
 
     private void buttonAActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonAActionPerformed
         try {
-            if (!client.isConferenceStreaming()) {
-                startStreaming();
-                client.broadcastToConference(getIP(), getDimension());
+            if (Webcam.getWebcams() != null) {
+                for (Webcam cam : Webcam.getWebcams()) {
+                    client.updateChatLog(new Message("System", client.getUsername(), "Webcam available: " + cam.getName(), 2));
+                }
+                if (!client.isConferenceStreaming()) {
+                    startStreaming();
+                    client.broadcastToConference(getIP(), getDimension());
+                } else {
+                    client.recievePrivateMessage(new Message("System", client.getUsername(), "A user is already streaming.", 2));
+                }
             } else {
-                client.recievePrivateMessage(new Message("System", client.getUsername(), "A user is already streaming.", 2));
+                client.updateChatLog(new Message("System", client.getUsername(), "Cannot detect a webcam.", 2));
             }
+
         } catch (RemoteException ex) {
         }
     }//GEN-LAST:event_buttonAActionPerformed
@@ -230,7 +238,7 @@ public class BroadcastPanel extends javax.swing.JPanel {
 
     private void buttonDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDActionPerformed
         BufferedImage bi = videoPanel.image;
-        String fileName = "Conclave_Screenshot" + lastPhotoID++ +".png";
+        String fileName = "Conclave_Screenshot" + lastPhotoID++ + ".png";
         File outputfile = new File(fileName);
         try {
             ImageIO.write(bi, "png", outputfile);
@@ -257,15 +265,15 @@ public class BroadcastPanel extends javax.swing.JPanel {
             public void run() {
                 try {
                     while (true) {
-                    if (active) {
-                        if (client.hasStreamerUpdated()) {
-                            if (client.isConferenceStreaming()) {
-                                listenToStream(client.getStreamerLocation(), client.getConferenceDimension(), client.getStreamerName());
-                            } else {
-                                emptyPanel();
+                        if (active) {
+                            if (client.hasStreamerUpdated()) {
+                                if (client.isConferenceStreaming()) {
+                                    listenToStream(client.getStreamerLocation(), client.getConferenceDimension(), client.getStreamerName());
+                                } else {
+                                    emptyPanel();
+                                }
                             }
                         }
-                    }
                         try {
                             Thread.sleep(500);
                         } catch (InterruptedException ex) {
@@ -285,6 +293,7 @@ public class BroadcastPanel extends javax.swing.JPanel {
         openPanel();
         Dimension containerDimension = new Dimension(d.width + 20, d.height + 20);
         videoContainer.setPreferredSize(containerDimension);
+        videoContainer.setMinimumSize(containerDimension);
         ListeningClient.run(videoPanel, loc, d);
         subscribeBroadcasterUpdates();
     }
@@ -305,8 +314,7 @@ public class BroadcastPanel extends javax.swing.JPanel {
         if (active) {
             ListeningClient.close();
         }
-        if (streaming)
-        {
+        if (streaming) {
             streamingServer.stopStreaming();
             streaming = false;
         }

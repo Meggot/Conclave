@@ -5,18 +5,15 @@
  */
 package conclaveclient.Conference;
 
-import conclaveclient.Conference.display.BroadcastPanel;
 import conclaveclient.Conference.display.VideoPanel;
 import conclaveclient.Conference.interfaces.StreamFrameListener;
-import conclaveclient.SwingGUI;
+
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.net.InetSocketAddress;
 
 public class ListeningClient {
-	/**
-	 * @author kerr
-	 * */
+	
 	private static VideoPanel displayWindow;
         private static StreamClientAgent clientAgent = null;
         

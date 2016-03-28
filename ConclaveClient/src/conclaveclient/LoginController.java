@@ -81,6 +81,8 @@ public class LoginController {
                     Registry registry = LocateRegistry.getRegistry(ip.getHostAddress(), 9807);
                     IUserInterface ui = (IUserInterface) registry.lookup(username);
                     SwingGUI newSwingGui = new SwingGUI(ui);
+                    newSwingGui.setVisible(true);
+                    System.out.println("HERE!");
                     returnString = "100 Login Successful";
                 } else {
                     returnString = responseString;

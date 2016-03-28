@@ -38,6 +38,7 @@ public class BroadcastPanel extends javax.swing.JPanel {
         streamerName.setText("To stream, hit the stream button in the toolbar.");
         client = ui;
         streaming = false;
+        active = true;
         lastPhotoID = this.hashCode();
         openPanel();
         subscribeBroadcasterUpdates();
@@ -50,7 +51,6 @@ public class BroadcastPanel extends javax.swing.JPanel {
 
     public void emptyPanel() {
         active = false;
-        streamerName.setText("");
         videoPanel.setVisible(false);
     }
 
@@ -198,9 +198,22 @@ public class BroadcastPanel extends javax.swing.JPanel {
         try {
             if (client.isConferenceStreaming()) {
                 if (streaming) {
+                    client.updateChatLog(new Message("System", client.getUsername(), "You have stopped streaming", 2));
                     client.stopBroadcasting();
                     stop();
                     emptyPanel();
+                } else {
+                    try {
+                        client.updateChatLog(new Message("System", client.getUsername(), "You are not streaming.", 2));
+                    } catch (RemoteException ex) {
+                        Logger.getLogger(BroadcastPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            } else {
+                try {
+                    client.updateChatLog(new Message("System", client.getUsername(), "There is no stream active..", 2));
+                } catch (RemoteException ex) {
+                    Logger.getLogger(BroadcastPanel.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         } catch (RemoteException e) {
@@ -212,7 +225,7 @@ public class BroadcastPanel extends javax.swing.JPanel {
         try {
             if (Webcam.getWebcams() != null) {
                 for (Webcam cam : Webcam.getWebcams()) {
-                    client.updateChatLog(new Message("System", client.getUsername(), "Webcam available: " + cam.getName(), 2));
+                    client.updateChatLog(new Message("System", client.getUsername(), "Found webcam: " + cam.getName() + ", trying to initiate Conclave Conference..", 2));
                 }
                 if (!client.isConferenceStreaming()) {
                     startStreaming();
@@ -223,7 +236,6 @@ public class BroadcastPanel extends javax.swing.JPanel {
             } else {
                 client.updateChatLog(new Message("System", client.getUsername(), "Cannot detect a webcam.", 2));
             }
-
         } catch (RemoteException ex) {
         }
     }//GEN-LAST:event_buttonAActionPerformed
@@ -231,8 +243,18 @@ public class BroadcastPanel extends javax.swing.JPanel {
     private void buttonCActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonCActionPerformed
         if (active) {
             emptyPanel();
+            try {
+                client.updateChatLog(new Message("System", client.getUsername(), "Hiding panel..", 2));
+            } catch (RemoteException ex) {
+                Logger.getLogger(BroadcastPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
         } else {
             openPanel();
+            try {
+                client.updateChatLog(new Message("System", client.getUsername(), "Showing panel..", 2));
+            } catch (RemoteException ex) {
+                Logger.getLogger(BroadcastPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }//GEN-LAST:event_buttonCActionPerformed
 
@@ -265,15 +287,27 @@ public class BroadcastPanel extends javax.swing.JPanel {
             public void run() {
                 try {
                     while (true) {
-                        if (active) {
                             if (client.hasStreamerUpdated()) {
                                 if (client.isConferenceStreaming()) {
-                                    listenToStream(client.getStreamerLocation(), client.getConferenceDimension(), client.getStreamerName());
+                                    if (!streaming) {
+                                        listenToStream(client.getStreamerLocation(), client.getConferenceDimension(), client.getStreamerName());
+                                        openPanel();
+
+                                        try {
+                                            client.updateChatLog(new Message("System", client.getUsername(), "A stream has started.", 2));
+                                        } catch (RemoteException ex) {
+                                            Logger.getLogger(BroadcastPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                        }
+                                    }
                                 } else {
                                     emptyPanel();
+                                    try {
+                                        client.updateChatLog(new Message("System", client.getUsername(), "A stream has stopped.", 2));
+                                    } catch (RemoteException ex) {
+                                        Logger.getLogger(BroadcastPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
                                 }
                             }
-                        }
                         try {
                             Thread.sleep(500);
                         } catch (InterruptedException ex) {

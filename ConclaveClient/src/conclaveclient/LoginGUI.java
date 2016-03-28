@@ -21,6 +21,7 @@ public class LoginGUI extends javax.swing.JFrame {
     private LoginController loginController;
 
     public LoginGUI() {
+        this.setTitle("Conclave Login");
         loginController = new LoginController();
         initComponents();
     }
@@ -224,7 +225,7 @@ public class LoginGUI extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel2)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 18, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jSeparator4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING))
@@ -240,8 +241,8 @@ public class LoginGUI extends javax.swing.JFrame {
                             .addComponent(portLabel)))
                     .addComponent(connectButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(2, 2, 2)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jSeparator3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(loginLabel2, javax.swing.GroupLayout.Alignment.TRAILING))
@@ -256,7 +257,7 @@ public class LoginGUI extends javax.swing.JFrame {
                     .addComponent(passwordForm, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(createAccountButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
@@ -264,38 +265,51 @@ public class LoginGUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
-        String loginStatus = "ERROR WHILST LOGGING IN";
-        try {
-            if (loginController.isConnected()) {
-                String username = usernameForm.getText();
-                String password = passwordForm.getText();
-                if (username != null && password != null) {
-                    if (username.length() < 5) {
-                        loginStatus = "Username too short.";
-                    } else if (username.length() < 5) {
-                        loginStatus = "Password too short.";
-                    } else {
-                        String responseString = loginController.login(username, password);
-                        if (responseString.contains("100")) {
-                            loginStatus = "Successful login";
-                            this.setVisible(false);
+        final LoginGUI window = this;
+        SwingWorker sw = new SwingWorker() {
+            String loginStatus = "ERROR WHILST LOGGING IN";
+            @Override
+            protected Object doInBackground() throws Exception {
+                try {
+                    if (loginController.isConnected()) {
+                        String username = usernameForm.getText();
+                        String password = passwordForm.getText();
+                        if (username != null && password != null) {
+                            if (username.length() < 5) {
+                                loginStatus = "Username too short.";
+                            } else if (username.length() < 5) {
+                                loginStatus = "Password too short.";
+                            } else {
+                                setLoginStatusText("Logging in..");
+                                String responseString = loginController.login(username, password);
+                                if (responseString.contains("100")) {
+                                    loginStatus = "Successful login";
+                                    window.setVisible(false);
+                                } else {
+                                    loginStatus = responseString;
+                                }
+                            }
                         } else {
-                            loginStatus = responseString;
+                            loginStatus = "You must enter all the fields";
                         }
+                    } else {
+                        loginStatus = "You must first connect to a Conclave server";
                     }
-                } else {
-                    loginStatus = "You must enter all the fields";
+                } catch (NumberFormatException e) {
+                    loginStatus = "You must enter all the fields appropriatly.";
+                } catch (RemoteException ex) {
+                    loginStatus = "Error connecting to specified server.";
+                    Logger.getLogger(LoginGUI.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            } else {
-                loginStatus = "You must first connect to a Conclave server";
+                return null;
             }
-        } catch (NumberFormatException e) {
-            loginStatus = "You must enter all the fields appropriatly.";
-        } catch (RemoteException ex) {
-            loginStatus = "Error connecting to specified server.";
-            Logger.getLogger(LoginGUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        setLoginStatusText(loginStatus);
+
+            @Override
+            protected void done() {
+                setLoginStatusText(loginStatus);
+            }
+        };
+        sw.execute();
     }//GEN-LAST:event_loginButtonActionPerformed
 
     private void createAccountButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createAccountButtonActionPerformed
@@ -305,6 +319,7 @@ public class LoginGUI extends javax.swing.JFrame {
                 String username = usernameForm.getText();
                 String password = passwordForm.getText();
                 if (username != null && password != null) {
+                    setLoginStatusText("Creating account..");
                     creationStatus = loginController.createAccount(username, password);
                 } else {
                     creationStatus = "You must enter all the fields";
@@ -336,6 +351,7 @@ public class LoginGUI extends javax.swing.JFrame {
             @Override
             protected Object doInBackground() throws Exception {
                 if (IP.length() > 6 && port.length() > 1) {
+                    setConnectionStatusText("Connecting to server...");
                     String response = loginController.connect(IP, port);
                     if (loginController.isConnected()) {
                         connectionStatus = response;

@@ -13,6 +13,8 @@ import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -24,7 +26,7 @@ public class PacketUtil {
 
     private InetAddress ip;
     private int port;
-    private final int timeOutPeriod = 3000;
+    private final int timeOutPeriod = 1500;
 
     public PacketUtil(InetAddress ip, int port) throws IOException {
         this.ip = ip;
@@ -72,10 +74,15 @@ public class PacketUtil {
                     } else {
                         entireRequest = entireRequest + "\n";
                     }
+                } else {
+                    timeOut++;
+                    Thread.sleep(1);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(PacketUtil.class.getName()).log(Level.SEVERE, null, ex);
         }
         return entireRequest;
     }

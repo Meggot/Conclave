@@ -57,6 +57,7 @@ public class SwingGUI extends javax.swing.JFrame {
 
     public SwingGUI(IUserInterface ui) {
         try {
+            this.setTitle("Conclave");
             lastExport = 0;
             initComponents();
             client = ui;
@@ -794,7 +795,7 @@ public class SwingGUI extends javax.swing.JFrame {
                             }
                             lastMessageLine = lstMsgClient;
                         }
-                        Thread.sleep(500);
+                        Thread.sleep(200);
                     }
                     updateChatlog(new Message("System", client.getUsername(), "You have been disconnected, Conclave will exit soon.", 2));
                     if (inRoom) {

@@ -66,7 +66,6 @@ public class ServerController implements Remote {
     private static final Logger log = Logger.getLogger(ServerController.class.getName());
 
     private static final int HANDLERS = 10;
-
     private ExecutorService pool = null;
 
     public static synchronized ServerController getInstance() {
@@ -104,7 +103,6 @@ public class ServerController implements Remote {
             connections.remove(name);
             try {
                 roomManager.kickUser(name, false);
-                Registry register = LocateRegistry.getRegistry();
                 //register.unbind(name);
             } catch (RemoteException ex) {
                 Logger.getLogger(ServerController.class.getName()).log(Level.SEVERE, null, ex);
@@ -125,6 +123,8 @@ public class ServerController implements Remote {
         } catch (RemoteException e) {
             log.log(Level.SEVERE, "Failed to load the RMI registry", e);
             stopServer();
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(ServerController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -156,7 +156,7 @@ public class ServerController implements Remote {
         public ServerManager(InetAddress ip, int port) {
             this.ip = ip;
             this.port = port;
-            open = false;
+            open = true;
         }
 
         public boolean isOpen() {
@@ -165,10 +165,10 @@ public class ServerController implements Remote {
 
         @Override
         public void run() {
-            open = true;
             try {
                 ServerSocket servSock = new ServerSocket(port, 50, ip);
                 servSock.setReuseAddress(true);
+                open = true;
                 while (open) {
                     Socket clientSocket = servSock.accept();
                     clientConnections++;
@@ -209,9 +209,9 @@ public class ServerController implements Remote {
 
         serverManager = new ServerManager(ip, port);
         pool.submit(serverManager);
-        performance = new CSVWriter(name + "-" + System.currentTimeMillis());
         if (serverManager.isOpen()) {
-            log.log(Level.INFO, "Server: {0} has been started, and is now open to new connections", name);
+            performance = new CSVWriter(name + "-" + System.currentTimeMillis(), ip, port);
+            log.log(Level.INFO, "Server: {0} has been started at: {1} on port {2}, and is now open to new connections",new Object[]{name, ip, port});
             open = true;
             Thread ConnectionManager = new Thread(new Runnable() {
                 @Override

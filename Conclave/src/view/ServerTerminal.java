@@ -17,6 +17,7 @@ public class ServerTerminal extends javax.swing.JFrame {
     private ServerController controller;
     
     public ServerTerminal() {
+        this.setTitle("Conclave Server Terminal");
         initComponents();
         controller = ServerController.getInstance();
     }

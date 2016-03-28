@@ -5,6 +5,8 @@
  */
 package conclave.rmiPolicy;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 
 /**
@@ -15,11 +17,11 @@ public class RegistryLoader {
 
     private static boolean loaded = false;
 
-    public static void Load() throws RemoteException {
+    public static void Load() throws RemoteException, UnknownHostException {
         if (loaded) {
             return;
         }
-        System.setProperty("java.rmi.server.hostname","192.168.0.7");
+        System.setProperty("java.rmi.server.hostname",InetAddress.getLocalHost().getHostAddress());
         java.rmi.registry.LocateRegistry.createRegistry(9807);
         System.out.println("Started Registry");
         loaded = true;

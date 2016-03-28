@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,9 +29,13 @@ public class CSVWriter {
     PrintWriter writer;
     private Socket sock;
 
-    public CSVWriter(String logName) {
+    private InetAddress ip;
+    private int port;
+    public CSVWriter(String logName, InetAddress ip, int port) {
         String fileName = "PerformanceLog_" + logName + ".csv";
         sock = null;
+        this.ip = ip;
+        this.port = port;
         loadWriter(fileName);
     }
 
@@ -65,7 +70,7 @@ public class CSVWriter {
     }
 
     public long responseTime() {
-        initateResponseSocket();
+        initateResponseSocket(ip, port);
         long returnLong = 0;
         try {
             OutputStream os = sock.getOutputStream();
@@ -122,9 +127,9 @@ public class CSVWriter {
         writer.close();
     }
 
-    private void initateResponseSocket() {
+    private void initateResponseSocket(InetAddress ip, int port) {
         try {
-            sock = new Socket("192.168.0.7", 20003);
+            sock = new Socket(ip, port);
         } catch (IOException ex) {
             Logger.getLogger(CSVWriter.class.getName()).log(Level.SEVERE, null, ex);
         }

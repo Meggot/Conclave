@@ -26,12 +26,13 @@ public class PacketUtil {
 
     private InetAddress ip;
     private int port;
-    private final int timeOutPeriod = 1500;
+    private final int timeOutPeriod = 10000;
 
     public PacketUtil(InetAddress ip, int port) throws IOException {
         this.ip = ip;
         this.port = port;
         outSocket = new Socket(ip, port);
+        outSocket.setSoTimeout(timeOutPeriod);
     }
 
     public void refreshSocket() {

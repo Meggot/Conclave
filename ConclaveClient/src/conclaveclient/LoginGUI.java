@@ -8,6 +8,9 @@ package conclaveclient;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingWorker;
@@ -112,7 +115,7 @@ public class LoginGUI extends javax.swing.JFrame {
             }
         });
 
-        ipForm.setText("192.168.0.7");
+        ipForm.setText("192.168.0.3");
         ipForm.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 ipFormActionPerformed(evt);
@@ -310,6 +313,15 @@ public class LoginGUI extends javax.swing.JFrame {
             }
         };
         sw.execute();
+        try { 
+            sw.get(5, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+            setLoginStatusText("Request timed-out");
+        } catch (ExecutionException ex) {
+            Logger.getLogger(LoginGUI.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (TimeoutException ex) {
+            setLoginStatusText("Request timed-out");
+        }
     }//GEN-LAST:event_loginButtonActionPerformed
 
     private void createAccountButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createAccountButtonActionPerformed

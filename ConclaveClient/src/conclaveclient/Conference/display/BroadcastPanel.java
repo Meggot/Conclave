@@ -286,7 +286,7 @@ public class BroadcastPanel extends javax.swing.JPanel {
         Thread roomUpdates = new Thread(new Runnable() {
             public void run() {
                 try {
-                    while (true) {
+                    while (client.inRoom()) {
                             if (client.hasStreamerUpdated()) {
                                 if (client.isConferenceStreaming()) {
                                     if (!streaming) {
@@ -314,6 +314,7 @@ public class BroadcastPanel extends javax.swing.JPanel {
                             Logger.getLogger(BroadcastPanel.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
+                    stop();
                 } catch (RemoteException ex) {
                     Logger.getLogger(BroadcastPanel.class.getName()).log(Level.SEVERE, null, ex);
                 }

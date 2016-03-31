@@ -17,6 +17,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * This ClientHandler class will receive and send Socket messages, this will
+ * handle request like: PING, LOGIN (username) (password), SETUP-ACCOUNT
+ * (username) (password).
+ *
+ * The response will return a HTTP request to the socket, and using a Switch
+ * method will also return a String response.
  *
  * @author BradleyW
  */
@@ -30,6 +36,10 @@ public class ClientHandler implements Runnable {
         this.server = ServerController.getInstance();
     }
 
+    /**
+     * This run handles the request, returns a response and then closes the
+     * socket.
+     */
     @Override
     public void run() {
         try {
@@ -50,6 +60,12 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * sends a response to an already established Socket.
+     *
+     * @param msg
+     * @return
+     */
     public boolean sendResponse(String msg) {
         try {
             String writeMsg = msg + "\n";
@@ -63,6 +79,12 @@ public class ClientHandler implements Runnable {
         return false;
     }
 
+    /**
+     * Recieves a request and returns the request as a string.
+     *
+     * @return
+     * @throws IOException
+     */
     public String recieveRequest() throws IOException {
         InputStreamReader insr = new InputStreamReader(socket.getInputStream());
         BufferedReader br = new BufferedReader(insr);
@@ -89,6 +111,12 @@ public class ClientHandler implements Runnable {
         return entireRequest;
     }
 
+    /**
+     * deals with a string request and returns a valid response.
+     *
+     * @param request
+     * @return
+     */
     private String handleRequest(String request) {
         String returnMsg = "";
         int responseCode = 502;
@@ -179,6 +207,12 @@ public class ClientHandler implements Runnable {
         return responseCode(responseCode) + returnMsg;
     }
 
+    /**
+     * changes a response code into a String response.
+     *
+     * @param code
+     * @return
+     */
     public String responseCode(int code) {
         String returnString;
         switch (code) {

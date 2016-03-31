@@ -14,25 +14,40 @@ import java.rmi.RemoteException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
+/**Conference room will host Conclave Conference rooms, this room is different from textroom in that
+ * it provides an IP and Socket of the streamer; as well as a Dimension. It extends a text room as 
+ * it provides the same basic functionality but adds to it.
  *
  * @author BradleyW
  */
 public class ConferenceRoom extends TextRoom implements IConferenceRoom {
 
-    private String streamerName;
-    private boolean streaming;
-    private Dimension streamingDimension;
-    private InetSocketAddress streamerIp;
+    //Streamer Variables.
+    private String streamerName; // streamer name
+    private boolean streaming; //is a user currently streaming
+    private Dimension streamingDimension; //streaming dimension
+    private InetSocketAddress streamerIp; //location of streaming network
+    
+    //Logger.
     private static final Logger log = Logger.getLogger(ConferenceRoom.class.getName());
 
+    /**
+     * Conference Room is initiated with a name, like a textroom.
+     * @param iroomName
+     * @throws RemoteException 
+     */
     public ConferenceRoom(String iroomName) throws RemoteException {
         super(iroomName);
-        this.roomType = 2;
-        streaming = false;
+        this.roomType = 2; //The type is 2, TextRoom is 1.
+        streaming = false; 
         streamerName = "";
     }
 
+    /**
+     * Returns the streamer socketIP of the current broadcaster.
+     * @return
+     * @throws RemoteException 
+     */
     @Override
     public InetSocketAddress getStreamerIp() throws RemoteException {
         if (streaming) {
@@ -41,6 +56,14 @@ public class ConferenceRoom extends TextRoom implements IConferenceRoom {
         return null;
     }
 
+    /**
+     * This is used by a user to start streaming to a room, it sets a couple of variables for listeners to use
+     * to recieve the video stream. Muted users cannot stream, however.
+     * @param username
+     * @param networkloc
+     * @param d
+     * @throws RemoteException 
+     */
     @Override
     public void startBroadcasting(String username, InetSocketAddress networkloc, Dimension d) throws RemoteException {
         if (censorList.contains(username)) {
@@ -55,12 +78,22 @@ public class ConferenceRoom extends TextRoom implements IConferenceRoom {
         }
     }
 
+    /**
+     * Updates all the streamer updated flag, this forces the view to update the streamer panel.
+     * Used for stopping or starting a broadcast.
+     * @throws RemoteException 
+     */
     public void updateActiveListeners() throws RemoteException {
         for (IUserInterface ui : roomConnections.values()) {
             ui.updateStreamer();
         }
     }
 
+    /**
+     * Stops a broadcast, by setting all the streamer variables to null.
+     * @param streamerName
+     * @throws RemoteException 
+     */
     @Override
     public void stopBroadcasting(String streamerName) throws RemoteException {
         if (streamerName.equals(this.streamerName)) {
@@ -73,16 +106,32 @@ public class ConferenceRoom extends TextRoom implements IConferenceRoom {
         }
     }
 
+    /**
+     * Gets a info view, this is used to display connection entries.
+     * @return
+     * @throws RemoteException 
+     */
     @Override
     public String getInfo() throws RemoteException {
         return "[ConferenceRoom] " + currentConnections + "/" + roomLimit + " {" + online + "}";
     }
 
+    /**
+     * Returns if the room currently has an active streamer.
+     * @return
+     * @throws RemoteException 
+     */
     @Override
     public boolean isStreaming() throws RemoteException {
         return streaming;
     }
 
+    /**
+     * Returns the dimension of the currently active stream, used for listeners
+     * to know how wide to paint a panel.
+     * @return
+     * @throws RemoteException 
+     */
     @Override
     public Dimension getDimension() throws RemoteException {
         if (streaming) {
@@ -91,6 +140,11 @@ public class ConferenceRoom extends TextRoom implements IConferenceRoom {
         return null;
     }
 
+    /**
+     * Returns the current streamer name, used for the view.
+     * @return
+     * @throws RemoteException 
+     */
     @Override
     public String getStreamerName() throws RemoteException {
         if (streaming) {

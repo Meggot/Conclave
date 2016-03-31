@@ -28,6 +28,12 @@ import javax.persistence.Persistence;
 import javax.persistence.Query;
 
 /**
+ * This class can be likened to the AcccountManager, in that it persists objects
+ * to a database, and validates room passwords using the hash method. This
+ * manager is also responsible for maintaining a list of all the rooms and their
+ * information, passing roomlistings to users. Users own this object as it
+ * allows them to always be aware of any room connection they may be able to
+ * connect to.
  *
  * @author BradleyW
  */
@@ -38,10 +44,15 @@ public class RoomManager {
     private HashMap<String, IConclaveRoom> hostedRooms;
     private final ArrayList<String> supportedRoomtypes = new ArrayList<>();
     private ArrayList<String> mutedUsers = new ArrayList<>();
-    private static final Logger log = Logger.getLogger( RoomManager.class.getName() );
+    private static final Logger log = Logger.getLogger(RoomManager.class.getName());
     private static RoomManager instance;
     EntityManagerFactory emf;
 
+    /**
+     * Supported room types are initilized, for demonstration purposes, in the
+     * constructor. New rooms that the manager could support must be added here
+     * if any new rooms are developed.
+     */
     private RoomManager() {
         roomConnections = new ConnectionsLog();
         sm = SecurityManager.getInstance();
@@ -51,6 +62,12 @@ public class RoomManager {
         emf = Persistence.createEntityManagerFactory("ConclavePU");
     }
 
+    /**
+     * As we want one unique instance of this object, we must employ a
+     * singleton pattern.
+     *
+     * @return
+     */
     public static RoomManager getInstance() {
         if (instance == null) {
             instance = new RoomManager();
@@ -58,6 +75,15 @@ public class RoomManager {
         return instance;
     }
 
+    /**
+     * This mounts an open room onto the server, that does not need a password
+     * to enter. This type of room is not persisted to the database.
+     *
+     * @param roomname
+     * @param roomType
+     * @return
+     * @throws RemoteException
+     */
     public boolean mountOpenRoom(String roomname, int roomType) throws RemoteException {
         boolean ok = false;
         try {
@@ -85,6 +111,16 @@ public class RoomManager {
         return ok;
     }
 
+    /**
+     * Creates a room and persists it to the database, this room is not added to
+     * the registry.
+     *
+     * @param roomname
+     * @param password
+     * @param roomType
+     * @return
+     * @throws RemoteException
+     */
     public boolean createRoom(String roomname, String password, int roomType) throws RemoteException {
         boolean success = false;
         Room newPersistenceRoom = new Room();
@@ -117,6 +153,14 @@ public class RoomManager {
         return success;
     }
 
+    /**
+     * This will load a room into the registry, (By roomname) from the
+     * persistence database, and allow it to be accessed by users.
+     *
+     * @param roomname
+     * @return
+     * @throws RemoteException
+     */
     public boolean loadRoom(String roomname) throws RemoteException {
         boolean success = false;
         try {
@@ -137,24 +181,47 @@ public class RoomManager {
         }
         return success;
     }
-    
-    public void listAllRooms() {
+
+    /**
+     * this will list all the rooms on the registry in the form of a returned String.
+     * This is useful for bug fixing.
+     * @return 
+     */
+    public String listAllRooms() {
+        String returnString = "";
         try {
             Registry reg = LocateRegistry.getRegistry(9807);
             String[] rooms = reg.list();
             for (String room : rooms) {
-                System.out.println(room);
+                returnString+= room;
             }
         } catch (RemoteException e) {
 
         }
+        return returnString;
     }
 
+    /**This will return a Connectionlog of all active rooms, this enables users to
+     * get an up-to date log of all rooms when they join the server, or leave a room.
+     * Updates to already connected users are done elsewhere.
+     * 
+     * @return
+     * @throws RemoteException 
+     */
     public ConnectionsLog returnRooms() throws RemoteException {
         return roomConnections;
     }
 
-
+    /**
+     * Returns a room based on a roomname, from the persistence database.
+     * It will also assign a specific room implementation to the object it passes.
+     * When implementing a new room, care must be made and the new type added to
+     * the switch.
+     * 
+     * @param roomname
+     * @return
+     * @throws RemoteException 
+     */
     public IConclaveRoom getConclaveRoom(String roomname) throws RemoteException {
         IConclaveRoom returnRoom = null;
         if (hostedRooms.get(roomname) != null) {
@@ -181,48 +248,70 @@ public class RoomManager {
         }
         return returnRoom;
     }
-    
 
-    public boolean isMuted(String username) throws RemoteException
-    {
+    /**
+     * Returns a boolean based on if the username is in the RoomManager muted users list
+     * @param username
+     * @return
+     * @throws RemoteException 
+     */
+    public boolean isMuted(String username) throws RemoteException {
         boolean mutedStatus = false;
-        if (mutedUsers.contains(username))
-        {
+        if (mutedUsers.contains(username)) {
             mutedStatus = true;
         }
         return mutedStatus;
     }
 
-
+    /** Kicks a user from a room. The banned flag is depreciated, but
+     * may still be implemented.
+     * 
+     * @param username
+     * @param banned
+     * @throws RemoteException 
+     */
     public void kickUser(String username, boolean banned) throws RemoteException {
-        for (IConclaveRoom croom : hostedRooms.values())
-        {
-            if (croom.hasUser(username))
-            {
+        for (IConclaveRoom croom : hostedRooms.values()) {
+            if (croom.hasUser(username)) {
                 croom.kickUser(username);
             }
         }
     }
-    
 
+    /**Unmutes a user by a username from the mutedUser array.
+     * 
+     * @param username
+     * @throws RemoteException 
+     */
     public void uncensorUser(String username) throws RemoteException {
-        mutedUsers.remove(username);
-        for (IConclaveRoom croom : hostedRooms.values())
+        if (mutedUsers.contains(username))
         {
-            croom.uncensorUser(username);
+            mutedUsers.remove(username);
+            for (IConclaveRoom croom : hostedRooms.values()) {
+                croom.uncensorUser(username);
+            }
         }
     }
-    
 
+    /**Mutes a user by a username
+     * 
+     * @param username
+     * @throws RemoteException 
+     */
     public void censorUser(String username) throws RemoteException {
         mutedUsers.add(username);
-        for (IConclaveRoom croom : hostedRooms.values())
-        {
+        for (IConclaveRoom croom : hostedRooms.values()) {
             croom.addCensoredUser(username);
         }
     }
 
-
+    /**
+     * If the room exists, returns true.
+     * 
+     * @param roomname
+     * @return
+     * @throws RemoteException 
+     */
     public boolean isARoom(String roomname) throws RemoteException {
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConclavePU");
         EntityManager manager = emf.createEntityManager();
@@ -237,15 +326,27 @@ public class RoomManager {
         return false;
     }
 
-
+    /**
+     * Removes a room from the Connections Log.
+     * 
+     * @param roomname
+     * @return
+     * @throws RemoteException 
+     */
     public boolean deleteRoom(String roomname) throws RemoteException {
         boolean successful = false;
         //JPA code
-        roomConnections.removeConnection(roomname);
+            roomConnections.removeConnection(roomname);
         return successful;
     }
 
-
+    /**
+     * Stops a room, and removes it from the connections log aswell as from the
+     * registry.
+     * 
+     * @param roomname
+     * @throws RemoteException 
+     */
     public void stopRoom(String roomname) throws RemoteException {
         if (isARoom(roomname) && hostedRooms.containsKey(roomname)) {
             IConclaveRoom room = getConclaveRoom(roomname);
@@ -256,7 +357,12 @@ public class RoomManager {
         }
     }
 
-
+    /**
+     * Returns true if the specified roomname has a password.
+     * @param roomname
+     * @return
+     * @throws RemoteException 
+     */
     public boolean hasPassword(String roomname) throws RemoteException {
         boolean has = false;
         if (isARoom(roomname)) {
@@ -268,7 +374,16 @@ public class RoomManager {
         return has;
     }
 
-
+    /**
+     * Validates a room bassed on a roomname and a password. This password
+     * is hashed and salted against the roomEntry password. Returns true
+     * if a correct password, and false for bad password.
+     * 
+     * @param roomname
+     * @param password
+     * @return
+     * @throws RemoteException 
+     */
     public boolean valdiateRoom(String roomname, String password) throws RemoteException {
         boolean validated = false;
         if (isARoom(roomname) && hasPassword(roomname)) {
@@ -282,10 +397,15 @@ public class RoomManager {
         return validated;
     }
 
-
+    /**
+     * Gets a room from the persistence database based on a roomname.
+     * 
+     * @param roomname
+     * @return
+     * @throws RemoteException 
+     */
     public Room getRoom(String roomname) throws RemoteException {
         Room returnedRoom = null;
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConclavePU");
         EntityManager manager = emf.createEntityManager();
         Query query = manager.createNamedQuery("Room.findAll");
         List<Room> rooms = query.getResultList();
@@ -298,8 +418,29 @@ public class RoomManager {
         }
         return returnedRoom;
     }
+    
+    /**
+     * Returns a collection of all the roomnames.
+     * @return 
+     */
+    public List<String> getAllRoomNames()
+    {
+        EntityManager manager = emf.createEntityManager();
+        Query query = manager.createNamedQuery("Room.findAll");
+        List<Room> rooms = query.getResultList();
+        List<String> returnCollection = new ArrayList();
+        for (Room room : rooms) {
+            returnCollection.add(room.getRoomname());
+        }
+        return returnCollection;
+    }
 
-
+    /**
+     * Sets a room open flag to true, it will also update the connections log.
+     * 
+     * @param roomname
+     * @throws RemoteException 
+     */
     public void openRoom(String roomname) throws RemoteException {
         IConclaveRoom room = hostedRooms.get(roomname);
         room.openRoom();
@@ -308,7 +449,13 @@ public class RoomManager {
         log.log(Level.INFO, "Room: {0} has been opened", roomname);
     }
 
-
+    /**
+     * Closes a room based on a roomname. This room will not let any new users connect to it, and is used to
+     * prevent interruptions to a meeting.
+     * 
+     * @param roomname
+     * @throws RemoteException 
+     */
     public void closeRoom(String roomname) throws RemoteException {
         IConclaveRoom room = hostedRooms.get(roomname);
         room.closeRoom();
@@ -316,17 +463,26 @@ public class RoomManager {
         roomConnections.addConnection(roomname, room.getInfo());
         log.log(Level.INFO, "Room: {0} has been closed", roomname);
     }
-    
-    
-    
 
-    public List<String> getAllRoomnames() throws RemoteException {
+    /**
+     * Returns a collection of all the roomnames, this is used to generally
+     * find out what rooms are available to try and join.
+     * 
+     * @return
+     * @throws RemoteException 
+     */
+    public List<String> getAllLoadedRoomnames() throws RemoteException {
         return new ArrayList(hostedRooms.keySet());
     }
     
 
+    /**
+     * Finds out all the room types that this manager is capable of supporting.
+     * @return
+     * @throws RemoteException 
+     */
     public List<String> getAllSupportedRoomTypes() throws RemoteException {
         return supportedRoomtypes;
     }
-    
+
 }

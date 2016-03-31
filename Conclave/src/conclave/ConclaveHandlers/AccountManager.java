@@ -5,7 +5,7 @@
  */
 package conclave.ConclaveHandlers;
 
-import conclave.db.*;
+import conclave.db.Account;
 import java.net.ConnectException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -16,16 +16,29 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
 
+/**
+ * This class will manage Account persistence and also validate passwords
+ *
+ * @author BradleyW
+ */
 public class AccountManager {
 
     private SecurityManager sm;
+    EntityManagerFactory emf;
 
     public AccountManager() {
         sm = SecurityManager.getInstance();
+        emf = Persistence.createEntityManagerFactory("ConclavePU");
     }
 
+    /**
+     * Returns an Account object based on a userid
+     *
+     * @param userid
+     * @return Account
+     * @throws ConnectException
+     */
     public Account getAccount(int userid) throws ConnectException {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConclavePU");
         EntityManager manager = emf.createEntityManager();
         Query query = manager.createNamedQuery("Account.findByUserid");
         query.setParameter("userid", userid);
@@ -34,11 +47,19 @@ public class AccountManager {
         if (potAccount != null) {
             return potAccount;
         }
+        manager.close();
         return null;
     }
 
+    /**
+     * Adds an account using a username and a password. It will hash this
+     * password and store it into the persistence database
+     *
+     * @param username
+     * @param PTpassword
+     * @throws ConnectException
+     */
     public void addAccount(String username, String PTpassword) throws ConnectException {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConclavePU");
         byte[] salt = new byte[16];
         try {
             SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
@@ -57,22 +78,47 @@ public class AccountManager {
             em.persist(newAccount);
             et.commit();
             em.close();
-            emf.close();
         }
     }
 
+    /**
+     * Gets a user object by using a username, this is a much more general
+     * search of the database and allows a user to be found without knowing the
+     * userid. As username uniquness is enforced, this is a perfectly acceptable
+     * way to search the database
+     *
+     * @param username
+     * @return Account
+     * @throws ConnectException
+     */
+    /**
+     *
+     * @param username
+     * @return
+     * @throws ConnectException
+     */
     public Account getUserByName(String username) throws ConnectException {
         Account returnedAccount = null;
         if (isAUser(username)) {
-            EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConclavePU");
             EntityManager manager = emf.createEntityManager();
             Query query = manager.createNamedQuery("Account.findByUsername");
             query.setParameter("username", username);
             returnedAccount = (Account) query.getSingleResult();
+            manager.close();
         }
         return returnedAccount;
     }
 
+    /**
+     * Verifies a username and password, this is used to verify login details
+     * before a ServerController initiates a UserInterface initilization and
+     * adds it to the RMI Registry.
+     *
+     * @param iusername
+     * @param ptPassword
+     * @return
+     * @throws ConnectException
+     */
     public boolean verifyUser(String iusername, String ptPassword) throws ConnectException {
         boolean verified = false;
         Account returnedAccount = getUserByName(iusername);
@@ -88,8 +134,14 @@ public class AccountManager {
         return verified;
     }
 
+    /**
+     * Verifies if a username exists in the database.
+     *
+     * @param username
+     * @return
+     * @throws ConnectException
+     */
     public boolean isAUser(String username) throws ConnectException {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConclavePU");
         EntityManager manager = emf.createEntityManager();
         Query query = manager.createNamedQuery("Account.findAll");
         List<Account> accounts = query.getResultList();
@@ -99,11 +151,19 @@ public class AccountManager {
                 return true;
             }
         }
+        manager.close();
         return false;
     }
 
+    /**
+     * Lists all the users on a database, this method isn't used in Conclave,
+     * but during development allowed testing and provides a primitive java
+     * interface.
+     *
+     * @return
+     * @throws ConnectException
+     */
     public String listAllUsers() throws ConnectException {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConclavePU");
         String allUsers = "";
         EntityManager manager = emf.createEntityManager();
         Query query = manager.createNamedQuery("Account.findAll");
@@ -112,7 +172,6 @@ public class AccountManager {
             allUsers = allUsers + account.toString();
         }
         manager.close();
-        emf.close();
         return allUsers;
     }
 }

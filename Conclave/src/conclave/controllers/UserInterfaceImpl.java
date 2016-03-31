@@ -29,25 +29,29 @@ import model.ConnectionsLog;
 import model.Message;
 import model.ServerFrontpage;
 
-/**
+/**User interface interacts with the server with general interactions
+ * Also is responsible for 
  *
  * @author BradleyW
  */
 public class UserInterfaceImpl extends UnicastRemoteObject implements IUserInterface {
 
-    private boolean inRoom;
-    private boolean connected;
-    private boolean connectionsUpdate;
-    private boolean frontpageUpdated;
+    //Model variables used to model the state
     private Account account;
     private ConnectionsLog connectionsLog;
     private IConclaveRoom activeRoom;
     private RoomManager roomListingsRoom;
     private final Chatlog chatLog;
-    private int lastMessageLine;
-    private Webcam activeWebcam;
-    private boolean activeWebcamUpdated;
     private ServerFrontpage ownFrontpage;
+    
+    //These state flags represent Server and Room state changes.
+    //These are primarilly used by the GUI to build an updated view.
+    private int lastMessageLine;
+    private boolean inRoom;
+    private boolean connected;
+    private boolean connectionsUpdate;
+    private boolean frontpageUpdated;
+    private boolean activeWebcamUpdated;
 
     public UserInterfaceImpl(Account account) throws RemoteException {
         lastMessageLine = 0;
@@ -59,7 +63,6 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements IUserInter
         connectionsLog = new ConnectionsLog();
         roomListingsRoom = RoomManager.getInstance();
         ownFrontpage = new ServerFrontpage();
-        activeWebcam = null;
         frontpageUpdated = true;
     }
 

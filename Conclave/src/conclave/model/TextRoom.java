@@ -18,11 +18,13 @@ import conclaveinterfaces.IConclaveRoom;
 import conclaveinterfaces.IUserInterface;
 
 /**
- *
+ *TextRoom, provides the basic room interactions. All other rooms should extend this,
+ * as it provides ChatLog + ConnectionLog functionality.
  * @author BradleyW
  */
 public class TextRoom extends UnicastRemoteObject implements IConclaveRoom {
     
+    //Basic room variables.
     public String roomName;
     public int roomLimit;
     public int currentConnections;
@@ -48,10 +50,9 @@ public class TextRoom extends UnicastRemoteObject implements IConclaveRoom {
     }
     
     /**
-     * CONTROL METHODS
-     * @throws java.rmi.RemoteException
+     * Stops a room, preventing new connections and then kicking everyone from the room.
+     * @throws RemoteException 
      */
-    
     @Override
     public void stopRoom() throws RemoteException
     {
@@ -63,6 +64,12 @@ public class TextRoom extends UnicastRemoteObject implements IConclaveRoom {
         }
     }
     
+    /**
+     * Adds a user to the room, used when joining a room.
+     * @param username
+     * @param user
+     * @throws RemoteException 
+     */
     @Override
     public void addUser(String username, IUserInterface user) throws RemoteException
     {
@@ -79,6 +86,11 @@ public class TextRoom extends UnicastRemoteObject implements IConclaveRoom {
         }
     }
     
+    /**
+     * Removes a user from the room, used when kicking or leaving a room.
+     * @param username
+     * @throws RemoteException 
+     */
     @Override
     public void removeUser(String username) throws RemoteException
     {
@@ -96,6 +108,12 @@ public class TextRoom extends UnicastRemoteObject implements IConclaveRoom {
         currentConnections--;
     }
 
+    /**
+     * Posts a chatlog message to all users in the room, if they are not muted.
+     * 
+     * @param message
+     * @throws RemoteException 
+     */
     @Override
     public void postMessage(Message message)throws RemoteException
     {
@@ -106,12 +124,24 @@ public class TextRoom extends UnicastRemoteObject implements IConclaveRoom {
             whisper(new Message(roomName, message.getSenderName(), "You are currently muted", 2));
         }
     }
+    /**
+     * Edit the roomlimit of a room. No longer used in implementation.
+     * @param limit
+     * @throws RemoteException 
+     */
     @Override
     public void setLimit(int limit)throws RemoteException
     {
         this.roomLimit = limit;
     }
     
+    /**
+     * Updates all the chatlogs of users with the message, used
+     * during chatlog updates, or system messages.
+     * 
+     * @param msg
+     * @throws RemoteException 
+     */
     @Override
     public void updateAllClientsChatlog(Message msg) throws RemoteException
     {
@@ -129,30 +159,67 @@ public class TextRoom extends UnicastRemoteObject implements IConclaveRoom {
             }
     }
 
+    /**
+     * Returns the roomname.
+     * 
+     * @return
+     * @throws RemoteException 
+     */
     @Override
     public String getRoomName() throws RemoteException{
         return roomName;
     }
 
+    /**
+     * Returns the roomlimit.
+     * 
+     * @return
+     * @throws RemoteException 
+     */
     @Override
     public int getRoomLimit() throws RemoteException{
         return roomLimit;
     }
 
+    /**
+     * Returns a boolean based on if the room is open/closed.
+     * @return
+     * @throws RemoteException 
+     */
     @Override
     public boolean isOnline() throws RemoteException{
         return online;
     }
+    
+    /**
+     * Returns a connection info, used to display the room in the connections log.
+     * This should be overridden by any future implementations of rooms.
+     * @return
+     * @throws RemoteException 
+     */
     @Override
     public String getInfo() throws RemoteException {
         return "[TextRoom] " + currentConnections + "/" + roomLimit + " {" + online + "}";
     }
+    
+    /**
+     * Returns a connectionlog of all users in the room, used when joining a room to get
+     * all the users.
+     * 
+     * @return
+     * @throws RemoteException 
+     */
     @Override   
     public ConnectionsLog getAllConnections() throws RemoteException
     {
         return connectionsLog;
     }
     
+    /**
+     * Updates all clients connections, used when removing a player or a new player
+     * joins the room.
+     * @throws RemoteException 
+     */
     @Override
     public void updateAllClientsConnections() throws RemoteException
     {
@@ -162,24 +229,42 @@ public class TextRoom extends UnicastRemoteObject implements IConclaveRoom {
                 ui.updateConnections(connectionsLog);
             } catch (RemoteException e)
             {
-                removeUser(ui.getUsername());
+                removeUser(ui.getUsername()); //also as a failsafe, determines if the user is offline
             }
         }
      
     }
     
+    /**
+     * Mutes a user by adding them to the CensorList.
+     * @param username
+     * @throws RemoteException 
+     */
     @Override
     public void addCensoredUser(String username) throws RemoteException
     {
         censorList.add(username);
     }
     
+    /**
+     * Unmutes a user by removing them from the censor list.
+     * @param username
+     * @throws RemoteException 
+     */
     @Override
     public void uncensorUser(String username) throws RemoteException
     {
-        censorList.remove(username);
+        if (censorList.contains(username))
+        {
+            censorList.remove(username);
+        }
     }
 
+    /**
+     * Whispers a user with a private message.
+     * @param msg
+     * @throws RemoteException 
+     */
     @Override
     public void whisper(Message msg) throws RemoteException 
     {
@@ -189,13 +274,19 @@ public class TextRoom extends UnicastRemoteObject implements IConclaveRoom {
     }
     
     
+    /**
+     * Kicks the user from the room.
+     * @param username
+     * @throws RemoteException 
+     */
     @Override
     public void kickUser(String username) throws RemoteException 
     {
         IUserInterface ui = roomConnections.get(username);
-        ui.leaveRoom();
+        ui.leaveRoom(); //This calls the removeUser method, so no need to call it again.
     }
-    /**
+    
+    /**returns the type, for textroom this is 1.
      *
      * @return
      * @throws RemoteException
@@ -206,6 +297,13 @@ public class TextRoom extends UnicastRemoteObject implements IConclaveRoom {
         return roomType;
     }
 
+    /**
+     * Does the room contain this username?
+     * 
+     * @param username
+     * @return
+     * @throws RemoteException 
+     */
     @Override
     public boolean hasUser(String username) throws RemoteException {
         boolean has = false;
@@ -216,11 +314,21 @@ public class TextRoom extends UnicastRemoteObject implements IConclaveRoom {
         return has;
     }
 
+    /**
+     * Closes a room to new connections, does not interfere with current connections
+     * 
+     * @throws RemoteException 
+     */
     @Override
     public void closeRoom() throws RemoteException {
         online = false;
     }
 
+    /**
+     * Opens a room to new connections.
+     * 
+     * @throws RemoteException 
+     */
     @Override
     public void openRoom() throws RemoteException {
         online = true;

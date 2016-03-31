@@ -6,6 +6,7 @@
 package conclave.controllers;
 
 import util.CSVWriter;
+
 import conclave.ConclaveHandlers.AccountManager;
 import conclave.ConclaveHandlers.ClientHandler;
 import conclave.ConclaveHandlers.RoomManager;
@@ -13,6 +14,7 @@ import conclave.db.Account;
 import conclave.rmiPolicy.RMISecurityPolicyLoader;
 import conclave.rmiPolicy.RegistryLoader;
 import conclaveinterfaces.IUserInterface;
+
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetAddress;
@@ -20,10 +22,12 @@ import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,42 +36,55 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import model.ConnectionsLog;
 import model.Message;
 import model.ServerFrontpage;
 
+/**
+ * Servercontroller, responsible for hosting the server and maintaining connections, responsbile
+ * for holding Admins, banned users and the server frontpage. This class is responsible for
+ * creating UserInterfaces and AdminInterfaces as well as adding to the registry
+ * 
+ * @author BradleyW
+ */
 public class ServerController implements Remote {
 
     private String name;
     private InetAddress ip;
     private int port;
     private boolean open;
-
     private static int serverTicks;
 
-    private int clientConnections;
-
     //For performance logging, we will be exporting the performance information into a csv file.
-    //Using a fileWriter
-    //Collections to host all the needed connection info.
+    CSVWriter performance;
+    
     // TO avoid Concurrency exceptions like ConcurrentModificationException, we use
     //special java.util.concurrent library collections, like a conccurentHashMap, and a
     //"CopyOnWriteArraylist" which creates a copy of the collection when it edits.
-    private ConcurrentHashMap<String, IUserInterface> connections = new ConcurrentHashMap<>();
-    private CopyOnWriteArrayList<String> serverAdmins = new CopyOnWriteArrayList();
-    private CopyOnWriteArrayList<String> bannedUsers = new CopyOnWriteArrayList();
+    private final ConcurrentHashMap<String, IUserInterface> connections = new ConcurrentHashMap<>();
+    private final CopyOnWriteArrayList<String> serverAdmins = new CopyOnWriteArrayList();
+    private final CopyOnWriteArrayList<String> bannedUsers = new CopyOnWriteArrayList();
 
+    //sServer Frontpage
     ServerFrontpage frontpage;
+    //ServerManager, handles new socket connections
     ServerManager serverManager;
+    //AccountManager which manages persisted users.
     AccountManager accountManager;
+    //RoomManage which handles the Room registry, and save/loads to the database
     RoomManager roomManager;
-    CSVWriter performance;
+    
     private static ServerController instance;
     private static final Logger log = Logger.getLogger(ServerController.class.getName());
-
+    //Socket requests per tick 
+    private int requestsPerTicks;
+    //Executor handlers limit.
     private static final int HANDLERS = 10;
+    //ExecutorService pool.
     private ExecutorService pool = null;
 
+    //As we only want one server active on a JVM, we use a singleton pattern.
     public static synchronized ServerController getInstance() {
         if (instance == null) {
             instance = new ServerController();
@@ -77,25 +94,28 @@ public class ServerController implements Remote {
 
     private ServerController() {
         pool = Executors.newFixedThreadPool(HANDLERS);
-        serverTicks = 0;
-        name = "LAN Conclave Server";
+        serverTicks = 0; //1 tick is 1 second of runtime.
+        name = "LAN Conclave Server"; //hardcoded name
+        
+        //Initiate singleton patterns for the managers
         accountManager = new AccountManager();
         roomManager = RoomManager.getInstance();
         frontpage = new ServerFrontpage();
         instance = this;
-        frontpage.addNewAnnouncment(name, "Welcome to " + name);
+        frontpage.addNewAnnouncment(name, "Welcome to " + name); //hardcoded server welcome announcement
         open = false;
+        
+        // By adding this shutdown hook we can ensure that the server exits gracefully.
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                System.out.println("Stopping Server");
                 stopServer();
             }
         });
     }
 
     /**
-     * 
+     * Disconnects a user from the server, used when banning a user.
      * @param name 
      */
     public void disconnectUser(String name) {
@@ -114,6 +134,9 @@ public class ServerController implements Remote {
         }
     }
 
+    /**
+     * Loads the RMI policy and security policy.
+     */
     public void loadRMI() {
         try {
             if (System.getSecurityManager() == null) {
@@ -128,18 +151,38 @@ public class ServerController implements Remote {
         }
     }
 
+    /**
+     * Sets a server name.
+     * 
+     * @param iname 
+     */
     public void setName(String iname) {
         this.name = iname;
     }
 
+    /**
+     * Sets a server port which Conclave runs off.
+     * @param port 
+     */
     public void setPort(int port) {
         this.port = port;
     }
 
+    /**
+     * Sets the IP, this is sort of redudant, as the server always runs of its own
+     * localhost ip.
+     * @param ip 
+     */
     public void setIp(InetAddress ip) {
         this.ip = ip;
     }
 
+    /**
+     * Checks to see if the user is banned, use
+     * 
+     * @param username
+     * @return 
+     */
     public boolean isBanned(String username) {
         boolean is = false;
         if  (bannedUsers.contains(username))
@@ -149,6 +192,11 @@ public class ServerController implements Remote {
         return is;
     }
 
+    /**
+     * This server manager class is responsible for accepting socket connections and 
+     * assigning a new handler to the connection, it is started by the startServer() method
+     * and closed by closeServer();
+     */
     public class ServerManager implements Runnable {
         private final InetAddress ip;
         private final int port;
@@ -166,57 +214,68 @@ public class ServerController implements Remote {
         @Override
         public void run() {
             try {
-                ServerSocket servSock = new ServerSocket(port, 50, ip);
+                ServerSocket servSock = new ServerSocket(port, 50, ip); //conventional serversocket
                 servSock.setReuseAddress(true);
                 open = true;
                 while (open) {
                     Socket clientSocket = servSock.accept();
-                    clientConnections++;
+                    requestsPerTicks++;//increase the requestsPerTick, for the performance analysis.
                     ClientHandler handler = new ClientHandler(clientSocket);
-                    System.out.println("CLIENT CONNECTED..");
-                    pool.execute(handler);
+                    pool.execute(handler);//execute the new handlers runnable in the pool.
                 }
             } catch (BindException e) {
-                System.out.println("A conclave server is already running on that IP and port.");
-                e.printStackTrace();
+                Logger.getLogger(ClientHandler.class.getName()).log(Level.INFO, "A server has failed to bind to the IP");
             } catch (IOException e) {
-                e.printStackTrace();
+                 Logger.getLogger(ClientHandler.class.getName()).log(Level.INFO, "A server has failed to read from a socket connection.");
             } finally {
                 stopServer();
                 pool.shutdown();
             }
         }
 
+        /**
+         * Stops the server by breaking the ServerSocket accept() loop, allowing the finally clause
+         * to execute.
+         */
         public void stopServer() {
             open = false;
             log.log(Level.INFO, "The server has been stopped");
         }
 
-    }
+    } //End of ServerManager class.
 
+    //Server Controller
+    
+    /**
+     * This method will start the Server, load the RMI registry and
+     * also load any rooms found in the Persistence database. It will
+     * also run a ConnectionManager thread which will monitor connection states
+     * and remove disconnected users.
+     */
     public void startServer() {
         loadRMI();
         startRooms();
         try {
-            ip = InetAddress.getLocalHost();
+            ip = InetAddress.getLocalHost(); //gets the localhost ip.
         } catch (UnknownHostException ex) {
             log.log(Level.SEVERE, "Failed to startup the server on localhost", ex);
         }
-        port = 20003;
+        port = 20003; //default Conclave port is 20003
         if (ip != null) {
             log.log(Level.INFO, "A LAN has been initilized.");
         }
 
         serverManager = new ServerManager(ip, port);
-        pool.submit(serverManager);
-        if (serverManager.isOpen()) {
-            performance = new CSVWriter(name + "-" + System.currentTimeMillis(), ip, port);
+        open = true; //sets the open flag to true, allowing the newly created ServerManager to run, when it is submitted. 
+        pool.submit(serverManager); //submits the ServerManager into the ExecutrPool
+        if (serverManager.isOpen()) { //if the server managed to startup.
+            performance = new CSVWriter(name + "-" + System.currentTimeMillis(), ip, port); // new performance writer, saved to a unique filename
             log.log(Level.INFO, "Server: {0} has been started at: {1} on port {2}, and is now open to new connections",new Object[]{name, ip, port});
-            open = true;
-            Thread ConnectionManager = new Thread(new Runnable() {
+            Thread ConnectionManager = new Thread(new Runnable() { //this thread will cycle through connections and remove ones with the Disconnected flag.
                 @Override
                 public void run() {
-                    while (open) {
+                    while (open) { //like the ServerManager, runs while server is open.
+                        requestsPerTicks = 0;
                         for (String name : connections.keySet()) {
                             try {
                                 IUserInterface uiTemp = connections.get(name);
@@ -228,9 +287,10 @@ public class ServerController implements Remote {
                             }
                         }
                         try {
-                            Thread.sleep(1000);
+                            Thread.sleep(1000); //Server tick, in the future this should be more natural and consistent.
                             serverTicks++;
-                            performance.systemLog(serverTicks, clientConnections, connections.size());
+                            //log all system info of use to a performance CSVWriter.
+                            performance.systemLog(serverTicks, requestsPerTicks, connections.size());
                         } catch (InterruptedException ex) {
                             Logger.getLogger(ServerController.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -245,6 +305,11 @@ public class ServerController implements Remote {
         }
     }
 
+    /**
+     * Returns a String of all connections, used as a testing method
+     * @return
+     * @throws RemoteException 
+     */
     public String viewAllConnections() throws RemoteException {
         String returnString = "";
         int i = 0;
@@ -255,6 +320,11 @@ public class ServerController implements Remote {
         return returnString;
     }
 
+    /**
+     * Connects the user to a server, if the server is open and the username is not banned.
+     * @param username
+     * @return 
+     */
     public boolean connect(String username) {
         boolean accepted = false;
         if (open && !bannedUsers.contains(username)) {
@@ -263,10 +333,21 @@ public class ServerController implements Remote {
         return accepted;
     }
 
+    /**
+     * Finds out if the username exists.
+     * @param name
+     * @return
+     * @throws java.net.ConnectException 
+     */
     public boolean isAUser(String name) throws java.net.ConnectException {
         return accountManager.isAUser(name);
     }
 
+    /**
+     * If a username is an Admin.
+     * @param username
+     * @return 
+     */
     public boolean isAAdmin(String username) {
         boolean isAdmin = false;
         if (serverAdmins.contains(username)) {
@@ -275,12 +356,23 @@ public class ServerController implements Remote {
         return isAdmin;
     }
 
+    /**
+     * Updates the frontpage with a msg, the username is used for clarity.
+     * @param username
+     * @param msg 
+     */
     public void updateFrontpage(String username, String msg) {
         frontpage.addNewAnnouncment(username, msg);
         updateAllClientsFrontpage(username, msg);
         log.log(Level.INFO, "Admin: {0} has posted a new announcement: {1}", new Object[]{username, msg});
     }
 
+    /**
+     * Updates all the users frontpage, this enables controlles to push frontpage announcements
+     * in realtime.
+     * @param username
+     * @param msg 
+     */
     public void updateAllClientsFrontpage(String username, String msg) {
         for (IUserInterface ui : connections.values()) {
             try {
@@ -291,6 +383,9 @@ public class ServerController implements Remote {
         }
     }
 
+    /**
+     * When aaconnection changes, all clients connections log is updated from this method.
+     */
     public void updateAllClientsConnections() {
         for (IUserInterface ui : connections.values()) {
             try {
@@ -301,21 +396,34 @@ public class ServerController implements Remote {
         }
     }
 
+    /**
+     * Returns the current frontpage
+     * @return 
+     */
     public List<String> getFrontpage() {
         return new ArrayList(frontpage.getFrontpage());
     }
 
+    /**
+     * Starts all rooms found in the persistence DB.
+     */
     public void startRooms() {
         try {
-            roomManager.createRoom("TestRoom", "Testicles", 1);
-            roomManager.mountOpenRoom("Open Room", 1);
-            roomManager.mountOpenRoom("Conclave Room", 2);
-            roomManager.loadRoom("TestRoom");
+            List<String> names = roomManager.getAllRoomNames();
+            for (String nme : names)
+            {
+                roomManager.loadRoom(nme);
+            }
         } catch (RemoteException e) {
             log.log(Level.SEVERE, e.toString(), e);
         }
     }
 
+    /**
+     * View all rooms connectionslog.
+     * 
+     * @return 
+     */
     public ConnectionsLog viewAllRooms() {
         try {
             return roomManager.returnRooms();
@@ -325,9 +433,17 @@ public class ServerController implements Remote {
         return null;
     }
 
+    /**
+     * Verifies a username + password and under a certain number of restrictions.
+     * If the user is verified then a new interface is created and added to the registry.
+     * @param username
+     * @param password
+     * @return
+     * @throws ConnectException 
+     */
     public boolean login(String username, String password) throws ConnectException {
         Account returnedAccount = null;
-        if (accountManager.verifyUser(username, password) && !bannedUsers.contains(username)) {
+        if (accountManager.verifyUser(username, password) && !bannedUsers.contains(username) && !connections.contains(username)) {
             returnedAccount = accountManager.getUserByName(username);
             if (returnedAccount != null) {
                 addNewInterface(returnedAccount);
@@ -338,16 +454,13 @@ public class ServerController implements Remote {
         return false;
     }
 
-    public void anonUserConnect() {
-        clientConnections++;
-        System.out.println("ANONUSER CONNECTED");
-    }
-
-    public void anonUserDisconnect() {
-        clientConnections--;
-        System.out.println("ANONUSER DISCONNECTED");
-    }
-
+    /**
+     * Adds a new interface for the account specified, if the account given is an
+     * admin, then it is assigned an AdminInterface object instead of a classic UserInterface.
+     * It will then add this UI onto the registry.
+     * @param returnedAccount
+     * @throws ConnectException 
+     */
     public void addNewInterface(Account returnedAccount) throws ConnectException {
         try {
             String username = returnedAccount.getUsername();
@@ -371,12 +484,21 @@ public class ServerController implements Remote {
         }
     }
 
+    /**
+     * Adds a username to be given an admin interface to the ArrayList.
+     * @param username 
+     */
     public void addAdmin(String username) {
         serverAdmins.add(username);
-        System.out.println("Admin Added: " + username);
         log.log(Level.INFO, "A new Admin has been added: {0}", username);
     }
 
+    /**
+     * Creates a new account, using the accountmanager to persist.
+     * @param username
+     * @param password
+     * @throws ConnectException 
+     */
     public void createAccount(String username, String password) throws ConnectException {
         if (username.length() >= 5 && password.length() >= 5) {
             accountManager.addAccount(username, password);
@@ -384,10 +506,18 @@ public class ServerController implements Remote {
         }
     }
 
+    /**
+     * Returns a List collection of all connected usernames, for more high level interactions
+     * with the connectied userbank.
+     * @return 
+     */
     public List<String> getAllConnectedUsernames() {
         return new ArrayList(connections.keySet());
     }
 
+    /**
+     * Stops the server, and disconnects all connected users.
+     */
     public void stopServer() {
         serverManager.stopServer();
         for (String name : connections.keySet()) {
@@ -397,6 +527,13 @@ public class ServerController implements Remote {
         performance.close();
     }
 
+    /**
+     * Alert a user, this is used during Admin messages, as well as
+     * room private whispers.
+     * 
+     * @param msg
+     * @param username 
+     */
     public void alertUser(Message msg, String username){
         IUserInterface user = connections.get(username);
         try {
@@ -406,6 +543,11 @@ public class ServerController implements Remote {
         }
     }
 
+    /**
+     * Checks to see if the user is logged in, used during the Login process.
+     * @param username
+     * @return 
+     */
     public boolean isUserLoggedIn(String username) {
         boolean loggedIn = false;
         if (connections.containsKey(username)) {
@@ -414,15 +556,17 @@ public class ServerController implements Remote {
         return loggedIn;
     }
 
+    /**
+     * Bans a user from the server, by a username. Will send them a private message too.
+     * @param username 
+     */
     public void banUser(String username) {
         if (connections.containsKey(username)) {
             IUserInterface ui = connections.get(username);
             try {
                 ui.recievePrivateMessage(new Message("System", username, "You have been banned from the server", 3));
-                roomManager.kickUser(username, true);
                 ui.disconnect();
             } catch (RemoteException ex) {
-                connections.remove(username);
             }
             bannedUsers.add(username);
         }

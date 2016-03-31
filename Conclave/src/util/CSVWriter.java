@@ -20,17 +20,25 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
+/**This class is responsible for writing performance information into a .csv file,
+ * for use in load testing and performance analysis.
  *
  * @author BradleyW
  */
 public class CSVWriter {
 
-    PrintWriter writer;
-    private Socket sock;
+    PrintWriter writer; //Printwriter used to write to a txt file.
+    private Socket sock; //Socket used to find response times.
 
-    private InetAddress ip;
-    private int port;
+    private InetAddress ip; //Server IP.
+    private int port; //Server port.
+    
+    /**
+     * Initiate a CSV writer with a ip, port and a logname which serves as the filename
+     * @param logName
+     * @param ip
+     * @param port 
+     */
     public CSVWriter(String logName, InetAddress ip, int port) {
         String fileName = "PerformanceLog_" + logName + ".csv";
         sock = null;
@@ -39,6 +47,10 @@ public class CSVWriter {
         loadWriter(fileName);
     }
 
+    /**
+     * Loads a writer, handles if the file doesn't exist or does and overwrites.
+     * @param filename 
+     */
     public void loadWriter(String filename) {
         try {
             writer = new PrintWriter(filename, "UTF-8");
@@ -47,14 +59,26 @@ public class CSVWriter {
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(CSVWriter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        writeToFile("Tick Count, Memory Used %, Response Time, Client Handlers, Logged Users, Thread Count");
+        writeToFile("Tick Count, Memory Used %, Response Time, Requests, Logged Users, Thread Count");
     }
 
+    /**
+     * Write a line to the CSV, this is usually done as: entry, entry, entry, entry
+     * The line carrage is done automatically
+     * @param dataSet 
+     */
     public void writeToFile(String dataSet) {
         writer.println(dataSet);
     }
 
-    public void systemLog(int tick, int anonUsers, int loggedUsers) {
+    /**
+     * Write a system log to the specified writer file.
+     * 
+     * @param tick
+     * @param requestsInTick
+     * @param loggedUsers 
+     */
+    public void systemLog(int tick, int requestsInTick, int loggedUsers) {
         long responseTime = responseTime();
         Runtime runtime = Runtime.getRuntime();
         long maxMemory = runtime.maxMemory();
@@ -69,6 +93,10 @@ public class CSVWriter {
         writeToFile(csvString);
     }
 
+    /**
+     * Finds out the response time in ms.
+     * @return 
+     */
     public long responseTime() {
         initateResponseSocket(ip, port);
         long returnLong = 0;
@@ -94,6 +122,12 @@ public class CSVWriter {
         return returnLong;
     }
 
+    /**
+     * Reads an entry from the socket, this is used to find out if there is a response,
+     * the String it reads is irrelevant, but should get a response.
+     * @param is
+     * @return 
+     */
     public String readStream(InputStream is) {
         InputStreamReader insr = new InputStreamReader(is);
         BufferedReader br = new BufferedReader(insr);
@@ -122,11 +156,20 @@ public class CSVWriter {
         return entireRequest;
     }
 
+    /**
+     * Closes the writer and saves the file, this must be called at the end of the logging
+     *time else the file will be unreadable.
+     */
     public void close() {
         writer.flush();
         writer.close();
     }
-
+    /**
+     * Starts up the socket, this is done every response time to find out if the server goes
+     * down or not.
+     * @param ip
+     * @param port 
+     */
     private void initateResponseSocket(InetAddress ip, int port) {
         try {
             sock = new Socket(ip, port);

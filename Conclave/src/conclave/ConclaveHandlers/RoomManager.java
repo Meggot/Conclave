@@ -143,12 +143,10 @@ public class RoomManager {
                 em.persist(newPersistenceRoom);
                 et.commit();
                 em.close();
-                emf.close();
                 log.log(Level.INFO, "A new room {0} has been persisted to the DB", roomname);
                 success = true;
             }
         } catch (RemoteException e) {
-
         }
         return success;
     }
@@ -416,6 +414,7 @@ public class RoomManager {
             }
 
         }
+        manager.close();
         return returnedRoom;
     }
     

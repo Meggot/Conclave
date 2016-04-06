@@ -87,7 +87,7 @@ public class CSVWriter {
         String csvString = tick + ","
                 + percentage + ","
                 + responseTime + ","
-                + anonUsers + ","
+                + requestsInTick + ","
                 + loggedUsers + ","
                 + java.lang.Thread.activeCount();
         writeToFile(csvString);

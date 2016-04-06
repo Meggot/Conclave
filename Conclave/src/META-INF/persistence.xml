@@ -9,6 +9,7 @@
       <property name="javax.persistence.jdbc.password" value="koalas"/>
       <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.ClientDriver"/>
       <property name="javax.persistence.jdbc.user" value="meggot"/>
+      <property name="javax.persistence.schema-generation.database.action" value="create"/>
     </properties>
   </persistence-unit>
   <persistence-unit name="ConclavePU2" transaction-type="RESOURCE_LOCAL">

@@ -40,7 +40,7 @@ import javax.persistence.Query;
 public class RoomManager {
 
     private ConnectionsLog roomConnections;
-    private SecurityManager sm;
+    private SecurityHandler sm;
     private HashMap<String, IConclaveRoom> hostedRooms;
     private final ArrayList<String> supportedRoomtypes = new ArrayList<>();
     private ArrayList<String> mutedUsers = new ArrayList<>();
@@ -55,7 +55,7 @@ public class RoomManager {
      */
     private RoomManager() {
         roomConnections = new ConnectionsLog();
-        sm = SecurityManager.getInstance();
+        sm = SecurityHandler.getInstance();
         supportedRoomtypes.add("ConferenceRoom");
         supportedRoomtypes.add("TextRoom");
         hostedRooms = new HashMap<>();
@@ -225,7 +225,6 @@ public class RoomManager {
         if (hostedRooms.get(roomname) != null) {
             returnRoom = hostedRooms.get(roomname);
         } else {
-            EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConclavePU");
             EntityManager manager = emf.createEntityManager();
             Query query = manager.createNamedQuery("Room.findAll");
             List<Room> rooms = query.getResultList();
@@ -311,7 +310,6 @@ public class RoomManager {
      * @throws RemoteException 
      */
     public boolean isARoom(String roomname) throws RemoteException {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConclavePU");
         EntityManager manager = emf.createEntityManager();
         Query query = manager.createNamedQuery("Room.findAll");
         List<Room> rooms = query.getResultList();

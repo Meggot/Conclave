@@ -10,11 +10,14 @@ import java.net.ConnectException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.List;
+import javax.persistence.Cache;
+import javax.persistence.CacheRetrieveMode;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import org.eclipse.persistence.config.QueryHints;
 
 /**
  * This class will manage Account persistence and also validate passwords
@@ -23,14 +26,23 @@ import javax.persistence.Query;
  */
 public class AccountManager {
 
-    private SecurityManager sm;
+    private SecurityHandler sm;
+    private static AccountManager instance;
     EntityManagerFactory emf;
 
-    public AccountManager() {
-        sm = SecurityManager.getInstance();
+    private AccountManager() {
+        sm = SecurityHandler.getInstance();
         emf = Persistence.createEntityManagerFactory("ConclavePU");
     }
-
+    
+    public static AccountManager getInstance()
+    {
+        if (instance==null)
+        {
+            instance = new AccountManager();
+        }
+        return instance;
+    }
     /**
      * Returns an Account object based on a userid
      *
@@ -40,6 +52,7 @@ public class AccountManager {
      */
     public Account getAccount(int userid) throws ConnectException {
         EntityManager manager = emf.createEntityManager();
+        manager.setProperty(QueryHints.CACHE_RETRIEVE_MODE, CacheRetrieveMode.USE);
         Query query = manager.createNamedQuery("Account.findByUserid");
         query.setParameter("userid", userid);
         List<Account> accounts = query.getResultList();
@@ -73,6 +86,7 @@ public class AccountManager {
             newAccount.setUsername(username);
             newAccount.setSalt(salt);
             EntityManager em = emf.createEntityManager();
+            em.setProperty(QueryHints.CACHE_STORE_MODE, CacheRetrieveMode.BYPASS);
             EntityTransaction et = em.getTransaction();
             et.begin();
             em.persist(newAccount);
@@ -100,11 +114,12 @@ public class AccountManager {
     public Account getUserByName(String username) throws ConnectException {
         Account returnedAccount = null;
         if (isAUser(username)) {
-            EntityManager manager = emf.createEntityManager();
-            Query query = manager.createNamedQuery("Account.findByUsername");
+            EntityManager em = emf.createEntityManager();
+            em.setProperty(QueryHints.CACHE_RETRIEVE_MODE, CacheRetrieveMode.USE);
+            Query query = em.createNamedQuery("Account.findByUsername");
             query.setParameter("username", username);
             returnedAccount = (Account) query.getSingleResult();
-            manager.close();
+            em.close();
         }
         return returnedAccount;
     }
@@ -142,8 +157,10 @@ public class AccountManager {
      * @throws ConnectException
      */
     public boolean isAUser(String username) throws ConnectException {
-        EntityManager manager = emf.createEntityManager();
-        Query query = manager.createNamedQuery("Account.findAll");
+        EntityManager em = emf.createEntityManager();
+        em.setProperty(QueryHints.CACHE_RETRIEVE_MODE, CacheRetrieveMode.USE);
+        Query query = em.createNamedQuery("Account.findByUsername");
+        query.setParameter("username", username);
         List<Account> accounts = query.getResultList();
         for (Account account : accounts) {
             String tempUsrName = account.getUsername();
@@ -151,7 +168,7 @@ public class AccountManager {
                 return true;
             }
         }
-        manager.close();
+        em.close();
         return false;
     }
 

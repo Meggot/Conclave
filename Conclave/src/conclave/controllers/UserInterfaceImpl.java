@@ -30,7 +30,8 @@ import model.Message;
 import model.ServerFrontpage;
 
 /**User interface interacts with the server with general interactions
- * Also is responsible for 
+ * Also is responsible for providing state updates and view information.
+ * Consider this the Controller in the MVC paradigm.
  *
  * @author BradleyW
  */

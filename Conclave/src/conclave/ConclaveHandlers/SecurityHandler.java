@@ -15,17 +15,17 @@ import javax.crypto.SecretKey;
  *
  * @author BradleyW
  */
-public class SecurityManager {
+public class SecurityHandler {
     
     private Encryptor cipherAgent;
     private SecretKey skey;
     
-    private static SecurityManager instance;
+    private static SecurityHandler instance;
     
     /**
      * Initiates a DES key to initiate session keys.
      */
-    private SecurityManager()
+    private SecurityHandler()
     {
         try {
             skey = KeyGenerator.getInstance("DES").generateKey();
@@ -40,15 +40,15 @@ public class SecurityManager {
      * Singleton pattern here and only have one inistantiated object.
      * @return 
      */
-    public static synchronized SecurityManager getInstance() 
+    public static synchronized SecurityHandler getInstance() 
     {
         if (instance == null) {
-                instance = new SecurityManager();}
+                instance = new SecurityHandler();}
         return instance;
     }
     
     /**
-     * SecurityManager employs an Encryptor object to hash passwords.
+     * SecurityHandler employs an Encryptor object to hash passwords.
      * It takes a byte[] array as an argument, which the CipherAgent 
      * decodes and hashes the password with it.
      * @param password

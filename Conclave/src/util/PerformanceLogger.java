@@ -5,6 +5,7 @@
  */
 package util;
 
+import com.sun.management.OperatingSystemMXBean;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -15,57 +16,67 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.management.MBeanServerConnection;
 
-/**This class is responsible for writing performance information into a .csv file,
- * for use in load testing and performance analysis.
+/**
+ * This class is responsible for writing performance information into a .csv
+ * file, for use in load testing and performance analysis.
  *
  * @author BradleyW
  */
-public class CSVWriter {
+public class PerformanceLogger {
 
     PrintWriter writer; //Printwriter used to write to a txt file.
     private Socket sock; //Socket used to find response times.
 
     private InetAddress ip; //Server IP.
     private int port; //Server port.
-    
+
+    MBeanServerConnection mbsc;
+
     /**
-     * Initiate a CSV writer with a ip, port and a logname which serves as the filename
+     * Initiate a CSV writer with a ip, port and a logname which serves as the
+     * filename
+     *
      * @param logName
      * @param ip
-     * @param port 
+     * @param port
      */
-    public CSVWriter(String logName, InetAddress ip, int port) {
+    public PerformanceLogger(String logName, InetAddress ip, int port) {
         String fileName = "PerformanceLog_" + logName + ".csv";
         sock = null;
         this.ip = ip;
         this.port = port;
         loadWriter(fileName);
+        mbsc = ManagementFactory.getPlatformMBeanServer();
     }
-
+    
     /**
      * Loads a writer, handles if the file doesn't exist or does and overwrites.
-     * @param filename 
+     *
+     * @param filename
      */
     public void loadWriter(String filename) {
         try {
             writer = new PrintWriter(filename, "UTF-8");
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(CSVWriter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PerformanceLogger.class.getName()).log(Level.SEVERE, null, ex);
         } catch (UnsupportedEncodingException ex) {
-            Logger.getLogger(CSVWriter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PerformanceLogger.class.getName()).log(Level.SEVERE, null, ex);
         }
-        writeToFile("Tick Count, Memory Used %, Response Time, Requests, Logged Users, Thread Count");
+        writeToFile("Tick Count, Memory Used %, Response Time, Requests, Logged Users, Thread Count, CPU %");
     }
 
     /**
-     * Write a line to the CSV, this is usually done as: entry, entry, entry, entry
-     * The line carrage is done automatically
-     * @param dataSet 
+     * Write a line to the CSV, this is usually done as: entry, entry, entry,
+     * entry The line carrage is done automatically
+     *
+     * @param dataSet
      */
     public void writeToFile(String dataSet) {
         writer.println(dataSet);
@@ -73,29 +84,40 @@ public class CSVWriter {
 
     /**
      * Write a system log to the specified writer file.
-     * 
+     *
      * @param tick
      * @param requestsInTick
-     * @param loggedUsers 
+     * @param loggedUsers
      */
     public void systemLog(int tick, int requestsInTick, int loggedUsers) {
-        long responseTime = responseTime();
+        OperatingSystemMXBean osMBean;
+        double CPUloadpercent = 0;
+        try {
+            osMBean = ManagementFactory.newPlatformMXBeanProxy(
+                    mbsc, ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
+            CPUloadpercent = osMBean.getProcessCpuLoad() * 100;
+        } catch (IOException ex) {
+            Logger.getLogger(PerformanceLogger.class.getName()).log(Level.SEVERE, null, ex);
+        }
         Runtime runtime = Runtime.getRuntime();
+        long responseTime = responseTime();
         long maxMemory = runtime.maxMemory();
         long memoryHeld = runtime.totalMemory();
-        float percentage = (float) ((memoryHeld * 100) / maxMemory);
+        float memoryUsedPercentage = (float) ((memoryHeld * 100) / maxMemory);
         String csvString = tick + ","
-                + percentage + ","
+                + memoryUsedPercentage + ","
                 + responseTime + ","
                 + requestsInTick + ","
                 + loggedUsers + ","
-                + java.lang.Thread.activeCount();
+                + java.lang.Thread.activeCount() + ","
+                 + CPUloadpercent;
         writeToFile(csvString);
     }
 
     /**
      * Finds out the response time in ms.
-     * @return 
+     *
+     * @return
      */
     public long responseTime() {
         initateResponseSocket(ip, port);
@@ -116,17 +138,18 @@ public class CSVWriter {
                 close();
             }
         } catch (IOException ex) {
-            Logger.getLogger(CSVWriter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PerformanceLogger.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return returnLong;
     }
 
     /**
-     * Reads an entry from the socket, this is used to find out if there is a response,
-     * the String it reads is irrelevant, but should get a response.
+     * Reads an entry from the socket, this is used to find out if there is a
+     * response, the String it reads is irrelevant, but should get a response.
+     *
      * @param is
-     * @return 
+     * @return
      */
     public String readStream(InputStream is) {
         InputStreamReader insr = new InputStreamReader(is);
@@ -157,24 +180,26 @@ public class CSVWriter {
     }
 
     /**
-     * Closes the writer and saves the file, this must be called at the end of the logging
-     *time else the file will be unreadable.
+     * Closes the writer and saves the file, this must be called at the end of
+     * the logging time else the file will be unreadable.
      */
     public void close() {
         writer.flush();
         writer.close();
     }
+
     /**
-     * Starts up the socket, this is done every response time to find out if the server goes
-     * down or not.
+     * Starts up the socket, this is done every response time to find out if the
+     * server goes down or not.
+     *
      * @param ip
-     * @param port 
+     * @param port
      */
     private void initateResponseSocket(InetAddress ip, int port) {
         try {
             sock = new Socket(ip, port);
         } catch (IOException ex) {
-            Logger.getLogger(CSVWriter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PerformanceLogger.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

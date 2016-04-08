@@ -7,6 +7,7 @@ package conclave.db;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -25,6 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "ACCOUNT")
 @XmlRootElement
+@Cacheable(true)
 @NamedQueries({
     @NamedQuery(name = "Account.findAll", query = "SELECT a FROM Account a"),
     @NamedQuery(name = "Account.findByUserid", query = "SELECT a FROM Account a WHERE a.userid = :userid"),

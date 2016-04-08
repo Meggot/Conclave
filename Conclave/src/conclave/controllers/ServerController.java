@@ -5,7 +5,7 @@
  */
 package conclave.controllers;
 
-import util.CSVWriter;
+import util.PerformanceLogger;
 
 import conclave.ConclaveHandlers.AccountManager;
 import conclave.ConclaveHandlers.ClientHandler;
@@ -34,6 +34,8 @@ import java.sql.Statement;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -62,7 +64,7 @@ public class ServerController implements Remote {
     private static int serverTicks;
 
     //For performance logging, we will be exporting the performance information into a csv file.
-    CSVWriter performance;
+    PerformanceLogger performance;
 
     // TO avoid Concurrency exceptions like ConcurrentModificationException, we use
     //special java.util.concurrent library collections, like a conccurentHashMap, and a
@@ -103,7 +105,7 @@ public class ServerController implements Remote {
         name = "LAN Conclave Server"; //hardcoded name
 
         //Initiate singleton patterns for the managers
-        accountManager = new AccountManager();
+        accountManager = AccountManager.getInstance();
         roomManager = RoomManager.getInstance();
         frontpage = new ServerFrontpage();
         instance = this;
@@ -237,8 +239,10 @@ public class ServerController implements Remote {
             } catch (IOException e) {
                 Logger.getLogger(ClientHandler.class.getName()).log(Level.INFO, "A server has failed to read from a socket connection.");
             } finally {
-                stopServer();
-                pool.shutdown();
+                if (!pool.isTerminated()) {
+                    System.err.println("cancel non-finished tasks");
+                }
+                pool.shutdownNow();
             }
         }
 
@@ -249,6 +253,7 @@ public class ServerController implements Remote {
         public void stopServer() {
             open = false;
             log.log(Level.INFO, "The server has been stopped");
+            pool.shutdown();
         }
 
     } //End of ServerManager class.
@@ -273,17 +278,38 @@ public class ServerController implements Remote {
             log.log(Level.INFO, "A LAN has been initilized.");
         }
 
+        performance = new PerformanceLogger(name + "-" + System.currentTimeMillis(), ip, port); // new performance writer, saved to a unique filename
+        /**
+         * This is responsible for logging the performance details to the csv,
+         * this allows each row in the csv file to be exactly 1 second apart.
+         */
+        class PerformanceLogging extends TimerTask {
+
+            public void run() {
+                serverTicks++;
+                performance.systemLog(serverTicks, requestsPerTicks, connections.size());
+                requestsPerTicks = 0;
+            }
+        }
+        Timer performanceAnalysis = new Timer();
         serverManager = new ServerManager(ip, port);
         open = true; //sets the open flag to true, allowing the newly created ServerManager to run, when it is submitted. 
+        //This code will take the server out of the pool, allowing all pool threads to only be used by 
+        //Thread newThread = new Thread(new Runnable() {
+        //    public void run()
+        //    {
+        //        serverManager.run();
+        //    }
+        //});
+        //newThread.start();
         pool.submit(serverManager); //submits the ServerManager into the ExecutrPool
+        performanceAnalysis.scheduleAtFixedRate(new PerformanceLogging(), 0, 1000);//schedule for once every second, starting immediantly.
         if (serverManager.isOpen()) { //if the server managed to startup.
-            performance = new CSVWriter(name + "-" + System.currentTimeMillis(), ip, port); // new performance writer, saved to a unique filename
             log.log(Level.INFO, "Server: {0} has been started at: {1} on port {2}, and is now open to new connections", new Object[]{name, ip, port});
             Thread ConnectionManager = new Thread(new Runnable() { //this thread will cycle through connections and remove ones with the Disconnected flag.
                 @Override
                 public void run() {
                     while (open) { //like the ServerManager, runs while server is open.
-                        requestsPerTicks = 0;
                         for (String name : connections.keySet()) {
                             try {
                                 IUserInterface uiTemp = connections.get(name);
@@ -296,9 +322,6 @@ public class ServerController implements Remote {
                         }
                         try {
                             Thread.sleep(1000); //Server tick, in the future this should be more natural and consistent.
-                            serverTicks++;
-                            //log all system info of use to a performance CSVWriter.
-                            performance.systemLog(serverTicks, requestsPerTicks, connections.size());
 
                         } catch (InterruptedException ex) {
                             Logger.getLogger(ServerController.class
@@ -497,7 +520,6 @@ public class ServerController implements Remote {
                 }
                 newUI.updateConnections(roomManager.returnRooms());
                 newUI.setFrontpage(frontpage.getFrontpage());
-                newUI.connect();
                 Registry registry = LocateRegistry.getRegistry(9807);
                 registry.rebind(username, newUI);
                 connections.put(username, newUI);
@@ -534,7 +556,7 @@ public class ServerController implements Remote {
 
     /**
      * Returns a List collection of all connected usernames, for more high level
-     * interactions with the connected userbank.
+     * interactions with the connected userbank. Used for Admin control.
      *
      * @return
      */

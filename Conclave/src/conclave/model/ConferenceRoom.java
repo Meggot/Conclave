@@ -74,7 +74,7 @@ public class ConferenceRoom extends TextRoom implements IConferenceRoom {
             this.streamingDimension = d;
             this.streaming = true;
             updateActiveListeners();
-            log.log(Level.INFO, "User: {0} has started to broadcast on room: {1}", new Object[]{username, roomName});
+            log.log(Level.INFO, "User: {0} has started to broadcast at room: {1}", new Object[]{username, roomName});
         }
     }
 
@@ -95,8 +95,8 @@ public class ConferenceRoom extends TextRoom implements IConferenceRoom {
      * @throws RemoteException 
      */
     @Override
-    public void stopBroadcasting(String streamerName) throws RemoteException {
-        if (streamerName.equals(this.streamerName)) {
+    public void stopBroadcasting(String istreamerName) throws RemoteException {
+        if (istreamerName.equals(this.streamerName)) {
             streamingDimension = null;
             this.streamerName = null;
             streamerIp = null;

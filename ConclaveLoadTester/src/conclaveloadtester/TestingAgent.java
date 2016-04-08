@@ -60,24 +60,26 @@ public class TestingAgent {
 
     public boolean beginTest(int iterations){
         int testNumber = 0;
+        long timeDiff = 0;
         for (String req : requests) {
             results.clear();
             testNumber++;
-            System.out.println("Testing req: " + req);
             for (int i = 0; i < iterations; i++) {
                 PacketUtil newAgent;
                 ResultEntry newEntry;
                 try {
-                    newAgent = new PacketUtil(InetAddress.getByName("192.168.0.7"), 20003);
-                    loadAgents.add(newAgent);
+                    newAgent = new PacketUtil(InetAddress.getByName("192.168.0.24"), 20003);
+                    //loadAgents.add(newAgent);
                     long startTime = System.currentTimeMillis();
                     newAgent.sendPacketRequest(req);
                     String response = newAgent.readStream();
-                    long timeDiff = System.currentTimeMillis() - startTime;
+                    timeDiff = System.currentTimeMillis() - startTime;
+                    /**
                     System.out.println("--LoadAgent: " + i + "--"
                             + "\n Request: " + req
                             + "\n Response: " + response
                             + "\n ResponseTime: " + timeDiff + "ms");
+                            * **/
                     newAgent.close();
                     newEntry = new ResultEntry(req, i, timeDiff);
                     results.add(newEntry);
@@ -86,10 +88,22 @@ public class TestingAgent {
                 }
             }
             long sum = 0;
+            long max = 0;
+            long min = timeDiff; //Instead of initilizing this at 0, which would always make in the miniumum, we'll set it to the last entry.
+            long entry = 0;
             for (ResultEntry res : results) {
-                sum = sum + res.getResponseTime();
+                entry = res.getResponseTime();
+                if (entry > max)
+                {
+                    max = entry;
+                } else if (entry < min)
+                {
+                    min = entry;
+                } 
+                sum = sum + entry;
             }
-            writer.systemLog(testNumber, req, (sum / results.size()));
+            long avg = (sum / results.size());
+            writer.systemLog(testNumber, req, avg, min, max);
         }
         writer.close();
         return true;

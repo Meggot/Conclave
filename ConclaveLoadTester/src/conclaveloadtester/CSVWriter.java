@@ -40,17 +40,19 @@ public class CSVWriter {
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(CSVWriter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        writeToFile("Test Number, Request, Response Time");
+        writeToFile("Test Number, Request, Mean Response Time, Min, Max");
     }
 
     public void writeToFile(String dataSet) {
         writer.println(dataSet);
     }
 
-    public void systemLog(int testNumber, String request, long responseTime) {
+    public void systemLog(int testNumber, String request, long responseTime, long min, long max) {
         String csvString = testNumber + ","
                 + request + ","
-                + responseTime;
+                + responseTime + ","
+                + min + "," +
+                + max;
         writeToFile(csvString);
     }
     

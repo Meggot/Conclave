@@ -33,4 +33,9 @@ public class ResultEntry {
     {
         return responseTime;
     }
+    
+    public int getRequestNumber()
+    {
+        return resultEntry;
+    }
 }

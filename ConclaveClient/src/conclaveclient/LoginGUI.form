@@ -198,6 +198,11 @@
   </Layout>
   <SubComponents>
     <Component class="javax.swing.JTextField" name="usernameForm">
+      <Properties>
+        <Property name="nextFocusableComponent" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
+          <ComponentRef name="passwordForm"/>
+        </Property>
+      </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="usernameFormActionPerformed"/>
       </Events>

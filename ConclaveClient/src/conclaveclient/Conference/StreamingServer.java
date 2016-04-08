@@ -14,6 +14,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.lang.Exception;
 
 /**
  *
@@ -26,16 +27,21 @@ public class StreamingServer {
     StreamServerAgent serverAgent = null;
     InetSocketAddress socketAddress;
     
-    public StreamingServer() {
+    public StreamingServer() throws Exception{
         try {
             socketAddress = new InetSocketAddress(InetAddress.getLocalHost(), 20000);
         } catch (UnknownHostException ex) {
             Logger.getLogger(StreamingServer.class.getName()).log(Level.SEVERE, null, ex);
         }
-        webcam = Webcam.getDefault();
-        dimension = WebcamResolution.VGA.getSize();
-        webcam.setViewSize(dimension);
-        Webcam.setAutoOpenMode(true);
+        if (Webcam.getWebcams()!=null)
+        {
+            webcam = Webcam.getDefault();
+            dimension = WebcamResolution.VGA.getSize();
+            webcam.setViewSize(dimension);
+            Webcam.setAutoOpenMode(true);
+        } else {
+            throw new Exception();
+        }
     }
 
     public void streamWebcam() {
@@ -49,6 +55,10 @@ public class StreamingServer {
             active = webcam.isOpen();
         }
         return active;
+    }
+    
+    public String getName() {
+        return webcam.getName();
     }
 
     public Dimension getDimension() {

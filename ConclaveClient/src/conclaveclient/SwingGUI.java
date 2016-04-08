@@ -51,18 +51,17 @@ public class SwingGUI extends javax.swing.JFrame {
     private boolean inRoom;
     private int lastMessageLine;
     private ArrayList<String> chatlogViewCategories = new ArrayList<String>();
-    private boolean adminController;
     private BroadcastPanel broadcastPanel;
     private static int lastExport;
 
     public SwingGUI(IUserInterface ui) {
         try {
+            ui.connect(); //Ensure the UI does not get thrown from the server.
             this.setTitle("Conclave");
             lastExport = 0;
             initComponents();
             client = ui;
             inRoom = false;
-            adminController = false;
             welcomeLabel.setText("Welcome to Conclave, " + ui.getUsername());
             setConnectionsArea(client.viewAllConnections());
             buildFrontpage();
@@ -122,9 +121,6 @@ public class SwingGUI extends javax.swing.JFrame {
         filtersMsg = new javax.swing.ButtonGroup();
         frontpage = new javax.swing.JPanel();
         announcments = new java.awt.List();
-        streamerControlPanel = new javax.swing.JPanel();
-        jButton2 = new javax.swing.JButton();
-        streamButton = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         connectionsScrollPanel = new javax.swing.JScrollPane();
         connectionsPanel = new javax.swing.JPanel();
@@ -254,37 +250,6 @@ public class SwingGUI extends javax.swing.JFrame {
             .addComponent(announcments, javax.swing.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE)
         );
 
-        jButton2.setText("Stop Streaming");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout streamerControlPanelLayout = new javax.swing.GroupLayout(streamerControlPanel);
-        streamerControlPanel.setLayout(streamerControlPanelLayout);
-        streamerControlPanelLayout.setHorizontalGroup(
-            streamerControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(streamerControlPanelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        streamerControlPanelLayout.setVerticalGroup(
-            streamerControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, streamerControlPanelLayout.createSequentialGroup()
-                .addContainerGap(22, Short.MAX_VALUE)
-                .addComponent(jButton2)
-                .addGap(20, 20, 20))
-        );
-
-        streamButton.setText("Stream");
-        streamButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                streamButtonActionPerformed(evt);
-            }
-        });
-
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         connectionsScrollPanel.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -397,22 +362,19 @@ public class SwingGUI extends javax.swing.JFrame {
             .addGroup(chatlogFilterPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(chatlogFilterPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(roomFilterCheckbox)
                     .addComponent(systemFilterCheckbox)
                     .addComponent(privateFilterCheckbox)
-                    .addComponent(adminFilterCheckbox))
+                    .addComponent(adminFilterCheckbox)
+                    .addComponent(roomFilterCheckbox)
+                    .addComponent(filterLabel))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, chatlogFilterPanelLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(filterLabel)
-                .addGap(29, 29, 29))
         );
         chatlogFilterPanelLayout.setVerticalGroup(
             chatlogFilterPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, chatlogFilterPanelLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap()
                 .addComponent(filterLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
                 .addComponent(roomFilterCheckbox)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(systemFilterCheckbox)
@@ -513,7 +475,7 @@ public class SwingGUI extends javax.swing.JFrame {
                 inRoom = false;
                 buildFrontpage();
             } else {
-                updateChatlog(new Message("System", client.getUsername(), "You are not in a room", 2));
+                client.updateChatLog(new Message("System", client.getUsername(), "You are not in a room", 2));
             }
         } catch (RemoteException e) {
 
@@ -533,7 +495,7 @@ public class SwingGUI extends javax.swing.JFrame {
                 br.newLine();
             }
             br.close();
-            updateChatlog(new Message("System", client.getUsername(), "You have exported a chatlog, saved as: " + exportFileName, 2));
+            client.updateChatLog(new Message("System", client.getUsername(), "You have exported a chatlog, saved as: " + exportFileName, 2));
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (IOException ex) {
@@ -613,23 +575,9 @@ public class SwingGUI extends javax.swing.JFrame {
         resetChatlogView();
     }//GEN-LAST:event_adminFilterCheckboxActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-
-    }//GEN-LAST:event_jButton2ActionPerformed
-
     private void sendMessageButtonKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_sendMessageButtonKeyPressed
         // TODO add your handling code here:
     }//GEN-LAST:event_sendMessageButtonKeyPressed
-
-    private void streamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_streamButtonActionPerformed
-        broadcastPanel.startStreaming();
-        try {
-            client.broadcastToConference(broadcastPanel.getIP(), broadcastPanel.getDimension());
-        } catch (RemoteException ex) {
-            Logger.getLogger(SwingGUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        pack();
-    }//GEN-LAST:event_streamButtonActionPerformed
 
     private void resetChatlogView() {
         textLog.setText("");
@@ -738,7 +686,7 @@ public class SwingGUI extends javax.swing.JFrame {
                     buildBroadcastPanel();
                 }
             } else {
-                updateChatlog(new Message("System", client.getUsername(), "You cannot connect to that room", 2));
+                 client.updateChatLog(new Message("System", client.getUsername(), "You cannot connect to that room", 2));
             }
         } catch (RemoteException e) {
 
@@ -837,7 +785,6 @@ public class SwingGUI extends javax.swing.JFrame {
     private javax.swing.ButtonGroup filtersMsg;
     private javax.swing.JPanel frontpage;
     private javax.swing.JPanel interactablePanel;
-    private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -860,8 +807,6 @@ public class SwingGUI extends javax.swing.JFrame {
     private javax.swing.JTextField roomPasswordEntry;
     private javax.swing.JButton roomPasswordSubmit;
     private javax.swing.JButton sendMessageButton;
-    private javax.swing.JButton streamButton;
-    private javax.swing.JPanel streamerControlPanel;
     private javax.swing.JCheckBox systemFilterCheckbox;
     private javax.swing.JTabbedPane tabbedPanel;
     private javax.swing.JTextArea textInputArea;

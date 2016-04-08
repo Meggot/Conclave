@@ -228,8 +228,14 @@ public class BroadcastPanel extends javax.swing.JPanel {
                     client.updateChatLog(new Message("System", client.getUsername(), "Found webcam: " + cam.getName() + ", trying to initiate Conclave Conference..", 2));
                 }
                 if (!client.isConferenceStreaming()) {
-                    startStreaming();
-                    client.broadcastToConference(getIP(), getDimension());
+                    try {
+                        String camName = startStreaming();
+                        client.broadcastToConference(getIP(), getDimension());
+                        client.recievePrivateMessage(new Message("System", client.getUsername(), "Webcam found: " + camName, 2));
+                    } catch (Exception e)
+                    {
+                        client.recievePrivateMessage(new Message("System", client.getUsername(), "A suitable webcam was not found.", 2));
+                    }
                 } else {
                     client.recievePrivateMessage(new Message("System", client.getUsername(), "A user is already streaming.", 2));
                 }
@@ -333,7 +339,7 @@ public class BroadcastPanel extends javax.swing.JPanel {
         subscribeBroadcasterUpdates();
     }
 
-    public void startStreaming() {
+    public String startStreaming() throws Exception{
         streamingServer = new StreamingServer();
         streamingServer.streamWebcam();
         streaming = true;
@@ -342,6 +348,7 @@ public class BroadcastPanel extends javax.swing.JPanel {
         } catch (RemoteException ex) {
             Logger.getLogger(BroadcastPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
+        return streamingServer.getName();
     }
 
     public void stop() {
@@ -353,6 +360,7 @@ public class BroadcastPanel extends javax.swing.JPanel {
             streamingServer.stopStreaming();
             streaming = false;
         }
+        streamerName.setText("To stream, hit the stream button in the toolbar.");
     }
 
     public InetSocketAddress getIP() {

@@ -129,11 +129,8 @@ public class ClientHandler implements Runnable {
                 responseCode = 100;
                 returnMsg = "Server is ready for connections";
             } else if (commandWords[0].equals("LOGIN")) {
-                if (commandWords.length == 1) {
+                if (commandWords.length <= 2) {
                     returnMsg = "No Username/Password given";
-                    responseCode = 400;
-                } else if (commandWords.length == 2) {
-                    returnMsg = "No Password given";
                     responseCode = 400;
                 } else if (commandWords.length == 3) {
                     try {
@@ -141,7 +138,7 @@ public class ClientHandler implements Runnable {
                         String password = commandWords[2];
                         if (!server.isAUser(username)) {
                             responseCode = 404;
-                            returnMsg = "A user by the username could not be found";
+                            returnMsg = "A user by that username could not be found";
                         } else if (server.isUserLoggedIn(username)) {
                             responseCode = 423;
                             returnMsg = "That user is already logged in";
@@ -167,36 +164,44 @@ public class ClientHandler implements Runnable {
                     }
                 }
             } else if (commandWords[0].equals("SETUP-ACCOUNT")) {
-                if (commandWords.length == 1) {
-                    returnMsg = "No Username/Password given";
-                    responseCode = 400;
-                } else if (commandWords.length == 2) {
-                    returnMsg = "No Password given";
+                System.out.println("setting up account");
+                if (commandWords.length <= 2) {
+                    returnMsg = "No username or password given";
                     responseCode = 400;
                 } else if (commandWords.length == 3) {
                     String username = commandWords[1];
                     String password = commandWords[2];
-                    try {
-                        if (server.isAUser(username)) {
-                            returnMsg = "That user already exists";
-                            responseCode = 202;
-                        } else {
-                            boolean creationSuccess = false;
+                    if (username.length() > 5 && password.length() > 5) {
+                        if (username.length() < 15 && password.length() < 15) {
                             try {
-                                server.createAccount(username, password);
-                                creationSuccess = server.isAUser(username);
-                            } catch (ConnectException ex) {
-                                Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                            responseCode = 400;
-                            returnMsg = "Incorrect account creation details";
-                            if (creationSuccess) {
-                                responseCode = 100;
-                                returnMsg = "Account creation success";
-                            }
-                        }
-                    } catch (ConnectException e) {
+                                if (server.isAUser(username)) {
+                                    returnMsg = "That user already exists";
+                                    responseCode = 202;
+                                } else {
+                                    boolean creationSuccess = false;
+                                    try {
+                                        server.createAccount(username, password);
+                                        creationSuccess = server.isAUser(username);
+                                    } catch (ConnectException ex) {
+                                        Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                    responseCode = 400;
+                                    returnMsg = "Incorrect account creation details";
+                                    if (creationSuccess) {
+                                        responseCode = 100;
+                                        returnMsg = "Account creation success";
+                                    }
+                                }
+                            } catch (ConnectException e) {
 
+                            }
+                        } else {
+                            responseCode = 400;
+                            returnMsg = "Username and Password must be less than 15 characters long";
+                        }
+                    } else {
+                        responseCode = 400;
+                        returnMsg = "Username and Password must be atleast 5 characters long";
                     }
                 }
             } else {

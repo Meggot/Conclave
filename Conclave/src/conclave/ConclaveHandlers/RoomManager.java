@@ -96,7 +96,7 @@ public class RoomManager {
                     room = new ConferenceRoom(roomname);
                     break;
             }
-            if (room != null) {
+            if (room != null && !isARoom(roomname)) {
                 room.openRoom();
                 hostedRooms.put(roomname, room);
                 roomConnections.addConnection(roomname, room.getInfo());
@@ -388,6 +388,7 @@ public class RoomManager {
             String enteredHashedPassword = sm.hashPassword(password, salt);
             if (room.getHashedpassword().equals(enteredHashedPassword)) {
                 validated = true;
+            } else {
             }
         }
         return validated;
@@ -403,7 +404,8 @@ public class RoomManager {
     public Room getRoom(String roomname) throws RemoteException {
         Room returnedRoom = null;
         EntityManager manager = emf.createEntityManager();
-        Query query = manager.createNamedQuery("Room.findAll");
+        Query query = manager.createNamedQuery("Room.findByRoomname");
+        query.setParameter("roomname", roomname);
         List<Room> rooms = query.getResultList();
         for (Room room : rooms) {
             String tmpRoomName = room.getRoomname();
@@ -480,6 +482,10 @@ public class RoomManager {
      */
     public List<String> getAllSupportedRoomTypes() throws RemoteException {
         return supportedRoomtypes;
+    }
+
+    public int roomsAmount() {
+        return hostedRooms.size();
     }
 
 }

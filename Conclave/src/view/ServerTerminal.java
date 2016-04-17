@@ -8,7 +8,8 @@ package view;
 import conclave.controllers.ServerController;
 import javax.swing.SwingWorker;
 
-/**
+/**This provides a basic view interaction with the server. Allows a superadmin to
+ * add new admins, and start/stop the server.
  *
  * @author BradleyW
  */

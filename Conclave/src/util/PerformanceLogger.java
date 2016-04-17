@@ -69,7 +69,7 @@ public class PerformanceLogger {
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(PerformanceLogger.class.getName()).log(Level.SEVERE, null, ex);
         }
-        writeToFile("Tick Count, Memory Used %, Response Time, Requests, Logged Users, Thread Count, CPU %");
+        writeToFile("Tick Count, Memory Used %, Response Time, Requests, Logged Users, Thread Count, CPU %, activeRooms");
     }
 
     /**
@@ -89,7 +89,7 @@ public class PerformanceLogger {
      * @param requestsInTick
      * @param loggedUsers
      */
-    public void systemLog(int tick, int requestsInTick, int loggedUsers) {
+    public void systemLog(int tick, int requestsInTick, int loggedUsers, int activeRooms) {
         OperatingSystemMXBean osMBean;
         double CPUloadpercent = 0;
         try {
@@ -110,7 +110,8 @@ public class PerformanceLogger {
                 + requestsInTick + ","
                 + loggedUsers + ","
                 + java.lang.Thread.activeCount() + ","
-                 + CPUloadpercent;
+                 + CPUloadpercent + ","
+                + activeRooms;
         writeToFile(csvString);
     }
 

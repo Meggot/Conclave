@@ -4,40 +4,49 @@
  * and open the template in the editor.
  */
 package conclave.rmiPolicy;
+
 import java.net.URL;
 import java.rmi.RMISecurityManager;
 
-/**
- *
+/**Acknowledgements: David Bowes
+ *This class loads a RMI security policy.
  * @author dhb
  */
 public class RMISecurityPolicyLoader {
 
     private static boolean loaded = false;
-    public static void LoadDefaultPolicy()
-    {
+
+    /**
+     * Loads a policy with the default name.
+     */
+    public static void LoadDefaultPolicy() {
         LoadPolicy("RMISecurity.policy");
     }
-    
+
+    /**
+     * Loads a policy using the specified filename, then assigns a security manager
+     * to the registry.
+     * @param policy 
+     */
     public static void LoadPolicy(String policy) {
-        if (loaded) {    return;     }
-        loaded = true;
-        ClassLoader cl = RMISecurityPolicyLoader.class.getClassLoader();
-        URL url = cl.getResource(policy) ;
-        if (url == null) {
-            System.out.println("Policy not found null (Have you included it in the jar file? (Don't forget to clean and build))");
-        } else {
-            System.out.println("Policy found");
-        }
-        System.out.println(url.toString());
-        System.setProperty("java.security.policy", url.toString());
+        if (!loaded) {
+            loaded = true;
+            ClassLoader cl = RMISecurityPolicyLoader.class.getClassLoader();
+            URL url = cl.getResource(policy);
+            if (url == null) {
+                //Policy not found.
+            } else {
+                //policy found
+            }
+            System.setProperty("java.security.policy", url.toString());
 
-        if (System.getSecurityManager() == null) {
-            System.out.println("Creating security policy");
-            System.setSecurityManager(new RMISecurityManager());
+            if (System.getSecurityManager() == null) {
+                System.setSecurityManager(new RMISecurityManager());
+            }
         }
-
     }
+
+    
 
     private RMISecurityPolicyLoader() {
     }

@@ -287,7 +287,7 @@ public class ServerController implements Remote {
 
             public void run() {
                 serverTicks++;
-                performance.systemLog(serverTicks, requestsPerTicks, connections.size());
+                performance.systemLog(serverTicks, requestsPerTicks, connections.size(), roomManager.roomsAmount());
                 requestsPerTicks = 0;
             }
         }
@@ -518,6 +518,7 @@ public class ServerController implements Remote {
                 } else {
                     newUI = new UserInterfaceImpl(returnedAccount);
                 }
+                newUI.connect();
                 newUI.updateConnections(roomManager.returnRooms());
                 newUI.setFrontpage(frontpage.getFrontpage());
                 Registry registry = LocateRegistry.getRegistry(9807);

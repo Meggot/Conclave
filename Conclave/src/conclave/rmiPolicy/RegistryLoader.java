@@ -9,7 +9,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 
-/**
+/**This class create an RMI registry at port 9807. 
  *
  * @author BradleyW
  */
@@ -23,7 +23,6 @@ public class RegistryLoader {
         }
         System.setProperty("java.rmi.server.hostname",InetAddress.getLocalHost().getHostAddress());
         java.rmi.registry.LocateRegistry.createRegistry(9807);
-        System.out.println("Started Registry");
         loaded = true;
     }
 

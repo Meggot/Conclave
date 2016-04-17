@@ -29,9 +29,10 @@ import model.ConnectionsLog;
 import model.Message;
 import model.ServerFrontpage;
 
-/**User interface interacts with the server with general interactions
- * Also is responsible for providing state updates and view information.
- * Consider this the Controller in the MVC paradigm.
+/**
+ * User interface interacts with the server with general interactions Also is
+ * responsible for providing state updates and view information. Consider this
+ * the Controller in the MVC paradigm.
  *
  * @author BradleyW
  */
@@ -44,7 +45,7 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements IUserInter
     private RoomManager roomListingsRoom;
     private final Chatlog chatLog;
     private ServerFrontpage ownFrontpage;
-    
+
     //These state flags represent Server and Room state changes.
     //These are primarilly used by the GUI to build an updated view.
     private int lastMessageLine;
@@ -84,13 +85,22 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements IUserInter
     @Override
     public boolean joinRoom(String entryName, String password) throws RemoteException {
         boolean ok = false;
+        if (roomListingsRoom.valdiateRoom(entryName, password)) {
+            ok = joinRoom(entryName);
+            inRoom = true;
+        }
+        return ok;
+    }
+
+    @Override
+    public boolean joinRoom(String entryName) throws RemoteException {
+        boolean ok = false;
         try {
-            if (connected && !inRoom && roomListingsRoom.hasPassword(entryName) && roomListingsRoom.valdiateRoom(entryName, password)) {
+            if (connected && !inRoom) {
                 final Registry registry = LocateRegistry.getRegistry(9807);
                 activeRoom = (IConclaveRoom) registry.lookup(entryName);
                 String username = account.getUsername();
                 if (activeRoom.isOnline()) {
-                    System.out.println("Reached.");
                     activeRoom.addUser(username, this);
                     connectionsLog = activeRoom.getAllConnections();
                     inRoom = true;
@@ -107,31 +117,6 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements IUserInter
         return ok;
     }
 
-    @Override
-    public boolean joinRoom(String entryName) throws RemoteException {
-        boolean ok = false;
-        try {
-            if (connected && !inRoom && !roomListingsRoom.hasPassword(entryName)) {
-                final Registry registry = LocateRegistry.getRegistry(9807);
-                activeRoom = (IConclaveRoom) registry.lookup(entryName);
-                String username = account.getUsername();
-                if (activeRoom.isOnline()) {
-                    activeRoom.addUser(username, this);
-                    connectionsLog = activeRoom.getAllConnections();
-                    inRoom = true;
-                    ok = true;
-                    connectionsUpdate = true;
-                    if (activeRoom.getType() == 2) {
-                        activeWebcamUpdated = true;
-                    }
-                }
-            }
-        } catch (NotBoundException e) {
-            e.printStackTrace();
-        }
-        return ok;
-    }
-    
     @Override
     public boolean inRoom() throws RemoteException {
         return inRoom;
@@ -191,7 +176,7 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements IUserInter
             System.out.println("Message is null.");
         }
     }
-    
+
     @Override
     public void updateConnections(ConnectionsLog newLog) throws RemoteException {
         connectionsLog = newLog;
@@ -252,7 +237,7 @@ public class UserInterfaceImpl extends UnicastRemoteObject implements IUserInter
 
     @Override
     public String exportChatLog() {
-       return chatLog.viewEntries();
+        return chatLog.viewEntries();
     }
 
     @Override

@@ -7,7 +7,7 @@ package conclaveclient.Conference;
 
 import conclaveclient.Conference.interfaces.StreamClientListener;
 import conclaveclient.Conference.interfaces.StreamFrameListener;
-import conclaveclient.Handlers.H264StreamDecoder;
+import conclaveclient.Handlers.utlity.H264StreamDecoder;
 import conclaveclient.Handlers.StreamClientHandler;
 import java.awt.Dimension;
 import org.jboss.netty.channel.ChannelPipeline;

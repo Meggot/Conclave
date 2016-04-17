@@ -5,6 +5,7 @@
  */
 package conclaveclient.Handlers;
 
+import conclaveclient.Handlers.utlity.FrameDecoder;
 import conclaveclient.Conference.interfaces.StreamClientListener;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;

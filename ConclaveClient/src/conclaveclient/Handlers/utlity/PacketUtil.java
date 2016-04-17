@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package conclaveclient.Handlers;
+package conclaveclient.Handlers.utlity;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -26,7 +26,7 @@ public class PacketUtil {
 
     private InetAddress ip;
     private int port;
-    private final int timeOutPeriod = 10000;
+    private final int timeOutPeriod = 500;
 
     public PacketUtil(InetAddress ip, int port) throws IOException {
         this.ip = ip;

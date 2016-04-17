@@ -12,7 +12,7 @@ package conclaveclient.Conference;
 import com.github.sarxos.webcam.Webcam;
 import conclaveclient.Conference.interfaces.StreamServerAgentInterface;
 import conclaveclient.Conference.interfaces.StreamServerListener;
-import conclaveclient.Handlers.H264StreamEncoder;
+import conclaveclient.Handlers.utlity.H264StreamEncoder;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.net.SocketAddress;

@@ -5,7 +5,7 @@
  */
 package conclaveclient.Conference;
 import conclaveclient.Conference.interfaces.StreamServerListener;
-import conclaveclient.Handlers.H264StreamEncoder;
+import conclaveclient.Handlers.utlity.H264StreamEncoder;
 import conclaveclient.Handlers.StreamServerHandler;
 import java.awt.Dimension;
 import org.jboss.netty.channel.ChannelPipeline;

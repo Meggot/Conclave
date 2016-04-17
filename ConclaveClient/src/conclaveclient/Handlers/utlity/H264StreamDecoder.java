@@ -1,4 +1,4 @@
-package conclaveclient.Handlers;
+package conclaveclient.Handlers.utlity;
 import conclaveclient.Conference.interfaces.StreamFrameListener;
 
 import java.awt.Dimension;

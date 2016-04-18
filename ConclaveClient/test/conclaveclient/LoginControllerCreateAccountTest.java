@@ -19,13 +19,16 @@ import static org.junit.Assert.*;
 public class LoginControllerCreateAccountTest {
 
     private static LoginController controller;
-
+ //Static Secret Key Variables for AES encryption setup.
+    private static final String secKey = "B55E4C33045B62AC907529233ADAAD6C";
+    private static final String secKeyUser = "00036";
+    
     public LoginControllerCreateAccountTest() {
     }
 
     @BeforeClass
     public static void setUpClass() {
-        controller = new LoginController();
+        controller = new LoginController(secKey, secKeyUser);
         controller.connect("192.168.0.15", "20003");
     }
 
@@ -117,7 +120,7 @@ public class LoginControllerCreateAccountTest {
     public void testCreateAccount9() {
         String username = "";
         String password = "123456789012345";
-        String expResult = "400 REQUEST SYNTAX ERROR No username or password given.";
+        String expResult = "400 REQUEST SYNTAX ERROR No username or password given";
         String result = controller.createAccount(username, password);
         assertEquals(expResult, result);
     }
@@ -126,7 +129,7 @@ public class LoginControllerCreateAccountTest {
     public void testCreateAccount10() {
         String username = "thixists";
         String password = "";
-        String expResult = "400 REQUEST SYNTAX ERROR No username or password given.";
+        String expResult = "400 REQUEST SYNTAX ERROR No username or password given";
         String result = controller.createAccount(username, password);
         assertEquals(expResult, result);
     }
@@ -135,7 +138,7 @@ public class LoginControllerCreateAccountTest {
     public void testCreateAccount11() {
         String username = "";
         String password = "";
-        String expResult = "400 REQUEST SYNTAX ERROR No username or password given.";
+        String expResult = "400 REQUEST SYNTAX ERROR No username or password given";
         String result = controller.createAccount(username, password);
         assertEquals(expResult, result);
     }

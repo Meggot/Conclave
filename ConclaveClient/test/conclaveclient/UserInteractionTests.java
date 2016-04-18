@@ -25,13 +25,16 @@ public class UserInteractionTests {
 
     private static IUserInterface ui;
     private static LoginController controller;
-
+ //Static Secret Key Variables for AES encryption setup.
+    private static final String secKey = "B55E4C33045B62AC907529233ADAAD6C";
+    private static final String secKeyUser = "00036";
+    
     public UserInteractionTests() {
     }
 
     @BeforeClass
     public static void setUpClass() {
-        controller = new LoginController();
+        controller = new LoginController(secKey, secKeyUser);
         controller.connect("192.168.0.15", "20003");
         controller.createAccount("UserAdam", "password123");
         try {

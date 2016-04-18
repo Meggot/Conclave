@@ -5,6 +5,7 @@
  */
 package conclaveclient.Handlers.utlity;
 
+import conclaveclient.security.Encryptor;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,16 +24,19 @@ import java.util.logging.Logger;
 public class PacketUtil {
 
     private Socket outSocket;
-
     private InetAddress ip;
     private int port;
-    private final int timeOutPeriod = 500;
+    private final int timeOutPeriod = 2000;
+    private String secKey;
+    private String skeyUser;
 
-    public PacketUtil(InetAddress ip, int port) throws IOException {
+    public PacketUtil(InetAddress ip, int port, String skey, String skeyUser) throws IOException {
         this.ip = ip;
         this.port = port;
         outSocket = new Socket(ip, port);
         outSocket.setSoTimeout(timeOutPeriod);
+        this.secKey = skey;
+        this.skeyUser = skeyUser;
     }
 
     public void refreshSocket() {
@@ -50,9 +54,12 @@ public class PacketUtil {
 
     public void sendPacketRequest(String request) throws UnknownHostException {
         try {
-            String writeMsg = request + "\n";
+            String encMessage = Encryptor.encrypt(request, secKey);
+            String writeMsg = skeyUser + encMessage
+                    + "\n";
             BufferedOutputStream bos = new BufferedOutputStream(outSocket.getOutputStream());
             OutputStreamWriter osw = new OutputStreamWriter(bos, "UTF-8");
+            System.out.println("Sending: " + writeMsg);
             osw.write(writeMsg);
             osw.flush();
         } catch (IOException e) {
@@ -85,7 +92,15 @@ public class PacketUtil {
         } catch (InterruptedException ex) {
             Logger.getLogger(PacketUtil.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return entireRequest;
+        String res;
+        if (!entireRequest.contains("403"))
+        {
+            res = Encryptor.decrypt(entireRequest, secKey);
+            System.out.println("Recieving: " + res);
+        } else {
+            res = entireRequest;
+        }
+        return res;
     }
 
     public void close() {

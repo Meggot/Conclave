@@ -21,14 +21,14 @@ import javax.swing.SwingWorker;
  */
 public class LoginGUI extends javax.swing.JFrame {
 
-    private LoginController loginController;
+    private static LoginController loginController;
 
-    public LoginGUI() {
+    public LoginGUI(LoginController controller) {
         this.setTitle("Conclave Login");
-        loginController = new LoginController();
+        loginController = controller;
         initComponents();
     }
-
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -374,11 +374,13 @@ public class LoginGUI extends javax.swing.JFrame {
                 if (IP.length() > 6 && port.length() > 1) {
                     setConnectionStatusText("Connecting to server...");
                     String response = loginController.connect(IP, port);
+                    System.out.println(response);
                     if (loginController.isConnected()) {
                         connectionStatus = response;
                     } else {
                         connectionStatus = "Cannot connect to this server.";
                     }
+                    connectionStatus = response;
                 } else {
                     connectionStatus = "You must enter all the fields appropriatly.";
                 }
@@ -437,7 +439,7 @@ public class LoginGUI extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new LoginGUI().setVisible(true);
+                new LoginGUI(loginController).setVisible(true);
             }
         });
 

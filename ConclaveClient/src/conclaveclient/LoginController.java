@@ -5,7 +5,7 @@
  */
 package conclaveclient;
 
-import conclaveclient.Handlers.PacketUtil;
+import conclaveclient.Handlers.utlity.PacketUtil;
 import static conclaveclient.rmi.RMISecurityPolicyLoader.LoadDefaultPolicy;
 import conclaveinterfaces.IUserInterface;
 import java.io.IOException;
@@ -28,13 +28,18 @@ public class LoginController {
 
     private boolean connected;
     private PacketUtil packetUtil;
-
+    private static String seckey;
+    private static String seckeyUser;
+    
     InetAddress ip;
     int port;
 
-    public LoginController() {
+    public LoginController(String skey, String skeyUser) {
         connected = false;
         LoadDefaultPolicy();
+        
+        this.seckey = skey;
+        this.seckeyUser = skeyUser;
     }
 
     public String connect(String iip, String iport) {
@@ -42,17 +47,25 @@ public class LoginController {
         connected = false;
         if (!connected) {
             try {
-                ip = InetAddress.getByName(iip);
-                port = Integer.parseInt(iport);
-                packetUtil = new PacketUtil(ip, port);
-                packetUtil.sendPacketRequest("PING");
-                returnString = packetUtil.readStream();
-                if (returnString != null) {
-                    connected = true;
-                    returnString = "Connected to server at: " + ip.toString() + ":" + port;
+                if (!iport.matches("[0-9]+") || !iip.matches("[0-9]+") && iip.length() <= 4) {
+                    returnString = "Bad format of IP/Port";
                 } else {
-                    packetUtil = null;
-                    returnString = "Failure to connect";
+                    ip = InetAddress.getByName(iip);
+                    port = Integer.parseInt(iport);
+                    packetUtil = new PacketUtil(ip, port, seckey, seckeyUser);
+                    packetUtil.sendPacketRequest("PING");
+                    returnString = packetUtil.readStream();
+                    if (returnString.contains("100")) {
+                        connected = true;
+                        returnString = "Connected to server at: " + ip.toString() + ":" + port;
+                    } else if (returnString!=null)
+                    {
+                        //we do not change the returnstring. This will usually be a respnose
+                        //such as invalid key.
+                    } else {
+                        packetUtil = null;
+                        returnString = "Failure to connect";
+                    }
                 }
             } catch (UnknownHostException e) {
                 returnString = "Cannot find a conclave server on that IP or Port";
@@ -64,8 +77,10 @@ public class LoginController {
         } else {
             returnString = "You are already connected!";
         }
-        packetUtil.close();
-        packetUtil = null;
+        if (packetUtil != null) {
+            packetUtil.close();
+            packetUtil = null;
+        }
         return returnString;
     }
 
@@ -73,7 +88,7 @@ public class LoginController {
         String returnString = "Error initiating login";
         if (connected) {
             try {
-                packetUtil = new PacketUtil(ip, port);
+                packetUtil = new PacketUtil(ip, port, seckey, seckeyUser);
                 packetUtil.sendPacketRequest("LOGIN " + username + " " + password);
                 String responseString = packetUtil.readStream();
                 String[] commandWords = responseString.split("//s+");
@@ -82,11 +97,8 @@ public class LoginController {
                     IUserInterface ui = (IUserInterface) registry.lookup(username);
                     SwingGUI newSwingGui = new SwingGUI(ui);
                     newSwingGui.setVisible(true);
-                    System.out.println("HERE!");
-                    returnString = "100 Login Successful";
-                } else {
-                    returnString = responseString;
                 }
+                returnString = responseString;
             } catch (UnknownHostException e) {
                 returnString = "That conclave server is currently down";
             } catch (NotBoundException e) {
@@ -98,9 +110,10 @@ public class LoginController {
         } else {
             returnString = "You must first connect to a conclave server";
         }
-        System.out.println(returnString);
-        packetUtil.close();
-        packetUtil = null;
+        if (packetUtil != null) {
+            packetUtil.close();
+            packetUtil = null;
+        }
         return returnString;
     }
 
@@ -112,7 +125,7 @@ public class LoginController {
         String returnString = "";
         if (connected) {
             try {
-                packetUtil = new PacketUtil(ip, port);
+                packetUtil = new PacketUtil(ip, port, seckey, seckeyUser);
                 packetUtil.sendPacketRequest("SETUP-ACCOUNT " + username + " " + password);
                 returnString = packetUtil.readStream();
             } catch (UnknownHostException e) {
@@ -123,8 +136,10 @@ public class LoginController {
         } else {
             returnString = "You must first connect to a conclave server";
         }
-        packetUtil.close();
-        packetUtil = null;
+        if (packetUtil != null) {
+            packetUtil.close();
+            packetUtil = null;
+        }
         return returnString;
     }
 }

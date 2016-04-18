@@ -10,7 +10,6 @@ import java.net.ConnectException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.List;
-import javax.persistence.Cache;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -18,6 +17,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
 import org.eclipse.persistence.config.QueryHints;
+import util.Encryptor;
 
 /**
  * This class will manage Account persistence and also validate passwords
@@ -31,7 +31,6 @@ public class AccountManager {
     EntityManagerFactory emf;
 
     private AccountManager() {
-        sm = SecurityHandler.getInstance();
         emf = Persistence.createEntityManagerFactory("ConclavePU");
     }
     
@@ -80,7 +79,7 @@ public class AccountManager {
         } catch (NoSuchAlgorithmException e) {
         }
         if (!isAUser(username)) {
-            String hashedPassword = sm.hashPassword(PTpassword, salt);
+            String hashedPassword = Encryptor.hashPassword(PTpassword, salt);
             Account newAccount = new Account();
             newAccount.setHashedpassword(hashedPassword);
             newAccount.setUsername(username);
@@ -140,7 +139,7 @@ public class AccountManager {
         if (returnedAccount.getUsername().equals(iusername)) {
             String hashandSalt = returnedAccount.getHashedpassword();
             byte[] salt = returnedAccount.getSalt();
-            String enteredHashedPassword = sm.hashPassword(ptPassword, salt);
+            String enteredHashedPassword = Encryptor.hashPassword(ptPassword, salt);
             if (enteredHashedPassword.equals(hashandSalt)) {
                 verified = true;
                 //System.out.println("User " + returnedAccount.getUsername() + " has logged in.");

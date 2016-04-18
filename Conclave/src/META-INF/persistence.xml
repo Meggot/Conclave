@@ -4,6 +4,8 @@
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <class>conclave.db.Room</class>
     <class>conclave.db.Account</class>
+    <class>conclave.db.Sessionkeys</class>
+    <class>conclave.db.Userkeys</class>
     <shared-cache-mode>NONE</shared-cache-mode>
     <properties>
       <property name="javax.persistence.jdbc.url" value="jdbc:derby://localhost:1527/conclaveDatabase"/>

@@ -5,7 +5,6 @@
  */
 package conclave.controllers;
 
-import com.github.sarxos.webcam.Webcam;
 import conclave.ConclaveHandlers.RoomManager;
 import conclave.db.Account;
 import conclaveinterfaces.IConclaveRoom;

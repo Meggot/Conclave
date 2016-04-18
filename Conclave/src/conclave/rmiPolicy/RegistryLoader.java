@@ -8,6 +8,11 @@ package conclave.rmiPolicy;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**This class create an RMI registry at port 9807. 
  *
@@ -25,7 +30,7 @@ public class RegistryLoader {
         java.rmi.registry.LocateRegistry.createRegistry(9807);
         loaded = true;
     }
-
+    
     private RegistryLoader() {
     }
 }

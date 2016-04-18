@@ -11,9 +11,11 @@ import model.ConnectionsLog;
 import conclave.model.TextRoom;
 import conclaveinterfaces.IConclaveRoom;
 import java.rmi.AlreadyBoundException;
+import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -26,6 +28,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import util.Encryptor;
 
 /**
  * This class can be likened to the AcccountManager, in that it persists objects
@@ -55,7 +58,7 @@ public class RoomManager {
      */
     private RoomManager() {
         roomConnections = new ConnectionsLog();
-        sm = SecurityHandler.getInstance();
+        sm = new SecurityHandler();
         supportedRoomtypes.add("ConferenceRoom");
         supportedRoomtypes.add("TextRoom");
         hostedRooms = new HashMap<>();
@@ -132,7 +135,7 @@ public class RoomManager {
         }
         try {
             if (!isARoom(roomname)) {
-                String hashedPassword = sm.hashPassword(password, salt);
+                String hashedPassword = Encryptor.hashPassword(password, salt);
                 newPersistenceRoom.setHashedpassword(hashedPassword);
                 newPersistenceRoom.setRoomname(roomname);
                 newPersistenceRoom.setSalt(salt);
@@ -385,7 +388,7 @@ public class RoomManager {
         if (isARoom(roomname) && hasPassword(roomname)) {
             Room room = getRoom(roomname);
             byte[] salt = room.getSalt();
-            String enteredHashedPassword = sm.hashPassword(password, salt);
+            String enteredHashedPassword = Encryptor.hashPassword(password, salt);
             if (room.getHashedpassword().equals(enteredHashedPassword)) {
                 validated = true;
             } else {
@@ -484,8 +487,19 @@ public class RoomManager {
         return supportedRoomtypes;
     }
 
-    public int roomsAmount() {
+    public int roomsAmount(){
         return hostedRooms.size();
+    }
+
+    public void stopRooms(){
+        for (IConclaveRoom room : hostedRooms.values())
+        {
+            try {
+                UnicastRemoteObject.unexportObject(room, true);
+            } catch (NoSuchObjectException ex) {
+                Logger.getLogger(RoomManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
 }

@@ -15,6 +15,7 @@ import java.net.ConnectException;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import util.Encryptor;
 
 /**
  * This ClientHandler class will receive and send Socket messages, this will
@@ -30,6 +31,8 @@ public class ClientHandler implements Runnable {
 
     private Socket socket;
     private ServerController server;
+    private String skey;
+    private int skeyUser;
 
     public ClientHandler(Socket sock) {
         this.socket = sock;
@@ -42,22 +45,31 @@ public class ClientHandler implements Runnable {
      */
     @Override
     public void run() {
+        String response = "INVALID REQUEST";
         try {
             String request = recieveRequest();
-            String response = handleRequest(request);
-            if (request == null) {
-                System.out.println("NULLREQUEST");
-            } else {
+            SecurityHandler sm = new SecurityHandler();
+            if (request.length() > 5) {
+                skeyUser = Integer.parseInt(request.substring(0, 5));
+                if (sm.isAKey(skeyUser)) {
+                    skey = sm.getKey(skeyUser);
+                    request = request.substring(5, request.length());
+                    String plaintextRequest = Encryptor.decrypt(request, skey);
+                    System.out.println(plaintextRequest);
+                    response = handleRequest(plaintextRequest);
+                } else {
+                    response = responseCode(403) + "Invalid key given";
+                }
                 Logger.getLogger(ClientHandler.class.getName()).log(Level.INFO,
-                        "ClientHandler: Thread '"
-                        + Thread.currentThread().toString()
-                        + "' received message: " + request
-                        + "' response sent: " + response);
+                    "ClientHandler: Thread '"
+                    + Thread.currentThread().toString()
+                    + "' received message: " + request
+                    + "' response sent: " + response);
             }
-            sendResponse(response);
-        } catch (IOException ex) {
-            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        sendResponse(response);
     }
 
     /**
@@ -68,13 +80,21 @@ public class ClientHandler implements Runnable {
      */
     public boolean sendResponse(String msg) {
         try {
-            String writeMsg = msg + "\n";
+            String response = "";
+            if (skey != null)//Checks to see if we have a session key for this communication
+            {
+                response = Encryptor.encrypt(msg, skey);
+            } else { //here the SKey was invalid, and this will usually be a invalid key msg.
+                response = msg;
+            }
+            response = response + "\n";
             BufferedOutputStream bos = new BufferedOutputStream(socket.getOutputStream());
             OutputStreamWriter osw = new OutputStreamWriter(bos, "UTF-8");
-            osw.write(writeMsg);
+            osw.write(response);
             osw.flush();
         } catch (IOException ex) {
-            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ClientHandler.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         return false;
     }
@@ -99,14 +119,17 @@ public class ClientHandler implements Runnable {
                         break;
                     } else {
                         entireRequest = entireRequest + "\n";
+
                     }
                 }
             }
 
         } catch (InterruptedException ex) {
-            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ClientHandler.class
+                    .getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ClientHandler.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         return entireRequest;
     }
@@ -154,13 +177,17 @@ public class ClientHandler implements Runnable {
                                 } else {
                                     returnMsg = "You have logged in as a User: " + username;
                                 }
+                                SecurityHandler sh = new SecurityHandler();
+                                sh.logKeyuse(skeyUser, username);
                             } else {
                                 responseCode = 401;
                                 returnMsg = "Incorrect username/password";
+
                             }
                         }
                     } catch (ConnectException ex) {
-                        Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(ClientHandler.class
+                                .getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             } else if (commandWords[0].equals("SETUP-ACCOUNT")) {
@@ -182,8 +209,10 @@ public class ClientHandler implements Runnable {
                                     try {
                                         server.createAccount(username, password);
                                         creationSuccess = server.isAUser(username);
+
                                     } catch (ConnectException ex) {
-                                        Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+                                        Logger.getLogger(ClientHandler.class
+                                                .getName()).log(Level.SEVERE, null, ex);
                                     }
                                     responseCode = 400;
                                     returnMsg = "Incorrect account creation details";

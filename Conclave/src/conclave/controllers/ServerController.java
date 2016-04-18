@@ -10,10 +10,14 @@ import util.PerformanceLogger;
 import conclave.ConclaveHandlers.AccountManager;
 import conclave.ConclaveHandlers.ClientHandler;
 import conclave.ConclaveHandlers.RoomManager;
+import conclave.ConclaveHandlers.SecurityHandler;
 import conclave.db.Account;
 import conclave.rmiPolicy.RMISecurityPolicyLoader;
 import conclave.rmiPolicy.RegistryLoader;
 import conclaveinterfaces.IUserInterface;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 
 import java.io.IOException;
 import java.net.BindException;
@@ -22,15 +26,14 @@ import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.rmi.NoSuchObjectException;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.rmi.server.UnicastRemoteObject;
+import java.security.NoSuchAlgorithmException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +65,7 @@ public class ServerController implements Remote {
     private int port;
     private boolean open;
     private static int serverTicks;
+    private static int clientKeysGenerated;
 
     //For performance logging, we will be exporting the performance information into a csv file.
     PerformanceLogger performance;
@@ -199,6 +203,23 @@ public class ServerController implements Remote {
             is = true;
         }
         return is;
+    }
+
+    public List<String> getAllKeys() {
+        SecurityHandler sh = new SecurityHandler();
+        List<String> keys = sh.getAllKeys();
+        return keys;
+    }
+
+    public void revokeKey(String keyValue) {
+        SecurityHandler sh = new SecurityHandler();
+        sh.revokeKey(keyValue);
+    }
+
+    public List<String> getKeyUsers(String key) {
+        SecurityHandler sh = new SecurityHandler();
+        List<String> keyUsers = sh.getKeyUsers(key);
+        return keyUsers;
     }
 
     /**
@@ -455,8 +476,12 @@ public class ServerController implements Remote {
         try {
             roomManager.mountOpenRoom("Atrium", 1);
             List<String> names = roomManager.getAllRoomNames();
+            List<String> loadedRooms = roomManager.getAllLoadedRoomnames();
             for (String nme : names) {
-                roomManager.loadRoom(nme);
+                if (!loadedRooms.contains(nme))
+                {
+                    roomManager.loadRoom(nme);
+                }
             }
         } catch (RemoteException e) {
             log.log(Level.SEVERE, e.toString(), e);
@@ -555,6 +580,32 @@ public class ServerController implements Remote {
         }
     }
 
+    public String generateNewSessionKey() {
+        SecurityHandler sh = new SecurityHandler();
+        String filename = null;
+        int keyIndex = 1;
+        try {
+            keyIndex = sh.generateSecretKey();
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(ServerController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        String paddedId = String.format("%05d", keyIndex);
+        String secretKey = sh.getKey(keyIndex);
+        String concatedString = secretKey + paddedId;
+        try {
+            filename = "secretkey" + clientKeysGenerated++ + ".txt";
+            FileOutputStream fos = new FileOutputStream(new File(filename));
+            fos.write(concatedString.getBytes());
+            fos.flush();
+            fos.close();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(ServerController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(ServerController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return filename;
+    }
+
     /**
      * Returns a List collection of all connected usernames, for more high level
      * interactions with the connected userbank. Used for Admin control.
@@ -570,12 +621,28 @@ public class ServerController implements Remote {
      */
     public void stopServer() {
         serverManager.stopServer();
-        for (String name : connections.keySet()) {
-            disconnectUser(name);
+        //roomManager.stopRooms();
+        for (String activename : connections.keySet()) {
+            disconnectUser(activename);
+        //    try {
+         //       UnicastRemoteObject.unexportObject(connections.get(activename), true);
+        //    } catch (NoSuchObjectException ex) {
+        //        Logger.getLogger(ServerController.class.getName()).log(Level.SEVERE, null, ex);
+        //    }
         }
         open = false;
         performance.close();
         pool.shutdown();
+        //Registry reg;
+        //try {
+            //reg = LocateRegistry.getRegistry();
+            //String[] regnames = reg.list();
+            //for (String name : regnames) {
+            //    System.out.println(name);
+            //}
+       // } catch (RemoteException ex) {
+       //     Logger.getLogger(ServerController.class.getName()).log(Level.SEVERE, null, ex);
+       // }
     }
 
     /**

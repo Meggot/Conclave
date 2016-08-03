@@ -7,3 +7,5 @@ ConclaveClient: This is the client application.
 ConclaveLoadTester: This application was used to stress test the server against numerous types of requests. To be run on a different computers on the same network. 
 
 The server will initiate a derby database. All code contains tests as this was developed in a TDD environment
+
+ ![alt tag](http://ConclaveClient/ConclaveLogo.png)	

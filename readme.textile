@@ -8,4 +8,4 @@ ConclaveLoadTester: This application was used to stress test the server against 
 
 The server will initiate a derby database. All code contains tests as this was developed in a TDD environment
 
-<img height="600" width="600" href="https://github.com/Meggot/Conclave/blob/master/ConclaveClient/ConclaveLogo.png">
+<img height="600" width="600" src="https://github.com/Meggot/Conclave/blob/master/ConclaveClient/ConclaveLogo.png"><
